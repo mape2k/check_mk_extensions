@@ -1,0 +1,113 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+#
+# (c) 2015 EXA EDV GmbH
+#          Marcel Pennewiß <marcel.pennewiss@exa-edv.de>
+#
+# Example output from agent:
+#
+# <<<exim_mailq>>>
+#     2     668     44m     43m  TOTAL
+#
+# **************
+#
+# <<<exim_mailq>>>
+#     4   252KB     61m      0m  TOTAL
+#
+
+# WARN num, CRIT num
+exim_mailq_default_levels = {
+   'length':           (10, 20),
+   'size':     	       (1048576, 2097152),
+   'age':              (3600, 7200),
+}
+
+def inventory_exim_mailq(info):
+    if len(info) > 0 and info[0] != '':
+        return [(None, 'exim_mailq_default_levels')]
+
+def exim_mailq_to_bytes(value):
+    if value[-1].isdigit():
+        return int(value)
+
+    size, uom = int(value[:-2]), value[-2:]
+    uom = uom.lower()
+
+    if uom == 'kb':
+        return size * 1024
+    elif uom == 'mb':
+        return size * 1024 * 1024
+    elif uom == 'gb':
+        return size * 1024 * 1024 * 1024
+
+def exim_mailq_to_seconds(value):
+    if value[-1].isdigit():
+        return int(value)
+
+    time, uom = int(value[:-1]), value[-1:]
+    uom = uom.lower()
+
+    if uom == 'm':
+        return time * 60
+    elif uom == 'h':
+        return time * 60 * 60
+    elif uom == 'd':
+        return time * 60 * 60 * 24
+
+def check_exim_mailq(item, params, info):
+    for line in info:
+	if line[-1] == 'TOTAL':
+            length    = int(line[0])
+
+            if length == 0:
+                return (0, 'OK - The mailqueue is empty ', [ ('length', 0, params['length'][0], params['length'][1]),
+                                                             ('size', 0, params['size'][0], params['size'][1]),
+                                                             ('age', 0, params['age'][0], params['age'][1]) ])
+            size     = exim_mailq_to_bytes(line[1])
+            age      = exim_mailq_to_seconds(line[2])
+
+    	    state = 0
+            output = []
+            perfdata = []
+
+            cur_state, thresh_out = 0, ''
+            if length >= params['length'][1]:
+                cur_state = 2
+                thresh_out = '(!!)'
+            elif length >= params['length'][0]:
+                cur_state = 1
+                thresh_out = '(!)'
+            output.append('Mailqueue length: %d%s' % (length, thresh_out))
+            perfdata.append(('length', length, params['length'][0], params['length'][1]))
+            state = max(state, cur_state)
+
+            cur_state, thresh_out = 0, ''
+            if size >= params['size'][1]:
+                cur_state = 2
+                thresh_out = '(!!)'
+            elif size >= params['size'][0]:
+                cur_state = 1
+                thresh_out = '(!)'
+            output.append('Mailqueue size: %s%s' % (line[1], thresh_out))
+            perfdata.append(('size', size, params['size'][0], params['size'][1]))
+            state = max(state, cur_state)
+
+            cur_state, thresh_out = 0, ''
+            if age >= params['age'][1]:
+                cur_state = 2
+                thresh_out = '(!!)'
+            elif age >= params['age'][0]:
+                cur_state = 1
+                thresh_out = '(!)'
+            output.append('Oldest mail: %s%s' % (line[2], thresh_out))
+            perfdata.append(('age', age, params['age'][0], params['age'][1]))
+            state = max(state, cur_state)
+
+            statname = { 0: "OK", 1:"WARN", 2:"CRIT" }[state]
+	    print perfdata
+            return (state, "%s - %s" % (statname, ', '.join(output)), perfdata)
+
+    return (3, 'UNKNOWN - Could not find summarizing line in output')
+
+check_info['exim_mailq'] = (check_exim_mailq, "Exim Queue", 1, inventory_exim_mailq)
+checkgroup_of["exim_mailq"] = "mailqueue_length"

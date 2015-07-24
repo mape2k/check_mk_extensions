@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# Exxim mailqueue monitoring
+if type exim >/dev/null 2>&1
+then
+  echo '<<<exim_mailq>>>'
+  exim -bp | exiqsumm |  tail -n 2 | head -n 1
+fi
