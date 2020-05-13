@@ -110,4 +110,4 @@ def check_exim_mailq(item, params, info):
     return (3, 'UNKNOWN - Could not find summarizing line in output')
 
 check_info['exim_mailq'] = (check_exim_mailq, "Exim Queue", 1, inventory_exim_mailq)
-checkgroup_of["exim_mailq"] = "mailqueue_length"
+group["exim_mailq"] = "mailqueue_length"
