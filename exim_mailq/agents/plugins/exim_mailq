@@ -4,5 +4,5 @@
 if type exim >/dev/null 2>&1
 then
   echo '<<<exim_mailq>>>'
-  exim -bp | exiqsumm |  tail -n 2 | head -n 1
+  exim -bp | exiqsumm 2> /dev/null |  tail -n 2 | head -n 1
 fi

@@ -1,4 +1,4 @@
-#!/bin/bash -e
+#!/bin/bash
 
 [[ -z $1 ]] && {
     echo "Usage $0 dev|prod"
@@ -8,6 +8,7 @@
 agentname="agents/plugins/exim_mailq"
 checkname="checks/exim_mailq"
 watoplugin="wato/plugins/check_parameters_exim_mailq.py"
+checkman="checkman/exim_mailq"
 
 [[ "xdev" == "x$1" ]] && {
     # for testing and development. Not ment to be used by others
@@ -15,7 +16,8 @@ watoplugin="wato/plugins/check_parameters_exim_mailq.py"
     # local testing:
     scp $checkname test@omd.lxd:local/share/check_mk/checks/
     scp $watoplugin test@omd.lxd:local/share/check_mk/web/plugins/wato/
-    scp $agentname web.lxd:/usr/lib/check_mk_agent/plugins/webchecks-agent.py
+    scp $agentname web.lxd:/usr/lib/check_mk_agent/plugins/
+    scp $checkman test@omd.lxd:local/share/check_mk/checkman/
 
     exit 0;
 }
