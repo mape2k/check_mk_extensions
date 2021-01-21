@@ -36,6 +36,11 @@ def inventory_exim_mailq(info):
        inventory.append( ('', {}) )
     return inventory
 
+# def parse_exim_mailq(info):
+#     for line in info:
+#         print(line)
+#     return []
+
 def exim_mailq_to_bytes(value):
     ''' Convert mailq size to bytes '''
 
@@ -133,4 +138,5 @@ check_info['exim_mailq'] = {
     'service_description'    : 'Exim mailq',
     'has_perfdata'           : True,
     'group'                  : 'exim_mailq',
+    #'parse_function'         : parse_exim_mailq,
 }

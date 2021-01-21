@@ -1,13 +1,12 @@
 # From https://github.com/cncook001/check_mk/blob/master/redis/wato/plugins/check_parameters_redis_queue.py
 
-group = "checkparams"
-subgroup_applications = _("Applications, Processes &amp; Services")
+#group = "exim_mailq"
+#subgroup_applications = _("Applications, Processes &amp; Services")
 register_check_parameters(
     subgroup_applications,
     "exim_mailq",
-    _("Exim Mailq lenght, size, age"),
+    _("Exim_Mailq"),
     Dictionary(
-        title = _("Limits"),
         elements = [
             ("warn_length",
                   Integer(
@@ -48,8 +47,6 @@ register_check_parameters(
         ],
         optional_keys = [ "warn_length", "crit_length", "warn_size", "crit_size", "warn_age", "crit_age" ],
     ),
-    # TextAscii( title=_("Ascii title?"),
-    # help=_("The name of the REDIS queue")),
-    # 'first'
+    TextAscii( title=_("Exim mailq"), allow_empty = True),
     match_type='dict',
 )
