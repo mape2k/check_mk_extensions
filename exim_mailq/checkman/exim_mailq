@@ -1,6 +1,6 @@
 title: Checks the state of the exim mailqueue
 agents: linux
-author: Marcel Pennewiß <marcel.pennewiss@exa-edv.de>
+author: Marcel Pennewiß <marcel.pennewiss@exa-edv.de>, Lars Falk-Petersen <dev@falkp>
 license: GPLv2
 distribution: check_mk
 description:
