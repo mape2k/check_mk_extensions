@@ -99,7 +99,7 @@ def check_exim_mailq(item, params, info):
             elif length >= params['warn_length']:
                 cur_state = 1
                 thresh_out = '(!)'
-            output.append('Mailqueue length: %d%s' % (length, thresh_out))
+            output.append('Mailqueue length: %d%s (limits %s, %s)' % (length, thresh_out, params['warn_length'], params['crit_length']))
             perfdata.append(('length', length, params['warn_length'], params['crit_length']))
             state = max(state, cur_state)
 
@@ -110,7 +110,7 @@ def check_exim_mailq(item, params, info):
             elif size >= params['warn_size']:
                 cur_state = 1
                 thresh_out = '(!)'
-            output.append('Mailqueue size: %s%s' % (line[1], thresh_out))
+            output.append('Mailqueue size: %s%s (limits %s, %s)' % (line[1], thresh_out, params['warn_size'], params['crit_size']))
             perfdata.append(('size', size, params['warn_size'], params['crit_size']))
             state = max(state, cur_state)
 
@@ -121,7 +121,7 @@ def check_exim_mailq(item, params, info):
             elif age >= params['warn_age']:
                 cur_state = 1
                 thresh_out = '(!)'
-            output.append('Oldest mail: %s%s' % (line[2], thresh_out))
+            output.append('Oldest mail: %s%s (limits %s, %s)' % (line[2], thresh_out, params['warn_age'], params['crit_age']))
             perfdata.append(('age', age, params['warn_age'], params['crit_age']))
             state = max(state, cur_state)
 
