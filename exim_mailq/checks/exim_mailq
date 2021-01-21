@@ -30,6 +30,7 @@ def inventory_exim_mailq(info):
     inventory = []
     for line in info:
        # line[0] is the name of the queue
+       #print(line)
        inventory.append( (line[0], {}) )
     return inventory
 
@@ -68,13 +69,15 @@ def exim_mailq_to_seconds(value):
 
 def check_exim_mailq(item, params, info):
     for line in info:
+        #print(line) # [u'0', u'0', u'0m', u'0000d', u'TOTAL']
+        #print(params) # {'warn_size': None, 'warn_length': None, 'warn_age': None, 'crit_age': None, 'crit_length': None, 'crit_size': None}
         if line[-1] == 'TOTAL':
             length = int(line[0])
 
             if length == 0:
-                return (0, 'OK - The mailqueue is empty ', [ ('length', 0, params['length'][0], params['length'][1]),
-                                                             ('size', 0, params['size'][0], params['size'][1]),
-                                                             ('age', 0, params['age'][0], params['age'][1]) ])
+                return (0, 'OK - The mailqueue is empty ', [ ('length', 0, params['warn_length'], params['crit_length']),
+                                                             ('size', 0, params['warn_size'], params['crit_size']),
+                                                             ('age', 0, params['warn_age'], params['crit_age']) ])
             size = exim_mailq_to_bytes(line[1])
             age  = exim_mailq_to_seconds(line[2])
 
@@ -121,6 +124,11 @@ def check_exim_mailq(item, params, info):
 
     return (3, 'UNKNOWN - Could not find summarizing line in output')
 
-check_info['exim_mailq'] = (check_exim_mailq, "Exim Queue", 1, inventory_exim_mailq)
-#group["exim_mailq"] = "mailqueue_length"
-group = "exim_mailq"
+check_info['exim_mailq'] = {
+    'check_function'         : check_exim_mailq,
+    'inventory_function'     : inventory_exim_mailq,
+    'default_levels_variable': "exim_mailq_default_levels",
+    'service_description'    : 'Exim mailq',
+    'has_perfdata'           : True,
+    'group'                  : 'exim_mailq',
+}

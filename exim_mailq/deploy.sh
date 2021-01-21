@@ -15,8 +15,8 @@ checkman="checkman/exim_mailq"
 
     # local testing:
     scp $checkname test@omd.lxd:local/share/check_mk/checks/
-    scp $watoplugin test@omd.lxd:local/share/check_mk/web/plugins/wato/
     scp $agentname web.lxd:/usr/lib/check_mk_agent/plugins/
+    scp $watoplugin test@omd.lxd:local/share/check_mk/web/plugins/wato/
     scp $checkman test@omd.lxd:local/share/check_mk/checkman/
 
     exit 0;

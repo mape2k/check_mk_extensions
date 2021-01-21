@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Exxim mailqueue monitoring
+# Exim mailqueue monitoring
 if type exim >/dev/null 2>&1
 then
   echo '<<<exim_mailq>>>'
