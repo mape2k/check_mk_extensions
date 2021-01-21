@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# Exim mailqueue monitoring
+# if type exim >/dev/null 2>&1
+# then
+    echo '<<<exim_mailq>>>'
+#   exim -bp | exiqsumm 2> /dev/null |  tail -n 2 | head -n 1
+# fi
+
+# for testing
+echo "    4    13KB     46h     24h  TOTAL"
