@@ -7,47 +7,49 @@ register_check_parameters(
     "exim_mailq",
     _("Exim Mailq lenght, size, age"),
     Dictionary(
+        title = _("Limits"),
         elements = [
             ("warn_length",
                   Integer(
-                      title = _("Warning level at"),
+                      title = _("Warning at length"),
                       default_value = None,
                   ),
             ),
             ("crit_length",
                   Integer(
-                      title = _("Critical Level at"),
+                      title = _("Critical at lenght"),
                       default_value = None,
                   ),
             ),
             ("warn_size",
                   Integer(
-                      title = _("Warning level at"),
+                      title = _("Warning at size"),
                       default_value = None,
                   ),
             ),
             ("crit_size",
                   Integer(
-                      title = _("Critical Level at"),
+                      title = _("Critical at size"),
                       default_value = None,
                   ),
             ),
             ("warn_age",
                   Integer(
-                      title = _("Warning level at"),
+                      title = _("Warning at age"),
                       default_value = None,
                   ),
             ),
             ("crit_age",
                   Integer(
-                      title = _("Critical Level at"),
+                      title = _("Critical at age"),
                       default_value = None,
                   ),
             ),
         ],
         optional_keys = [ "warn_length", "crit_length", "warn_size", "crit_size", "warn_age", "crit_age" ],
     ),
-    TextAscii( title=_("REDIS Queue Name"),
-    help=_("The name of the REDIS queue")),
-    'first'
+    # TextAscii( title=_("Ascii title?"),
+    # help=_("The name of the REDIS queue")),
+    # 'first'
+    match_type='dict',
 )

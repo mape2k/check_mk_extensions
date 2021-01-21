@@ -69,7 +69,7 @@ def exim_mailq_to_seconds(value):
 def check_exim_mailq(item, params, info):
     for line in info:
         if line[-1] == 'TOTAL':
-            length    = int(line[0])
+            length = int(line[0])
 
             if length == 0:
                 return (0, 'OK - The mailqueue is empty ', [ ('length', 0, params['length'][0], params['length'][1]),
