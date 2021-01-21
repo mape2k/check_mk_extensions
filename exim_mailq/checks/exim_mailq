@@ -30,8 +30,10 @@ def inventory_exim_mailq(info):
     inventory = []
     for line in info:
        # line[0] is the name of the queue
-       #print(line)
-       inventory.append( (line[0], {}) )
+    #    print("line")
+    #    print(line)
+    #    inventory.append( (line[0], {}) )
+       inventory.append( ('', {}) )
     return inventory
 
 def exim_mailq_to_bytes(value):
