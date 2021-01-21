@@ -5,7 +5,7 @@
     exit 1;
 }
 
-agentname="agents/plugins/exim_mailq"
+agentname="agents/plugins/exim_mailq-test"
 checkname="checks/exim_mailq"
 watoplugin="wato/plugins/check_parameters_exim_mailq.py"
 checkman="checkman/exim_mailq"
@@ -15,7 +15,7 @@ checkman="checkman/exim_mailq"
 
     # local testing:
     scp $checkname test@omd.lxd:local/share/check_mk/checks/
-    scp $agentname web.lxd:/usr/lib/check_mk_agent/plugins/
+    scp $agentname web.lxd:/usr/lib/check_mk_agent/plugins/exim_mailq
     scp $watoplugin test@omd.lxd:local/share/check_mk/web/plugins/wato/
     scp $checkman test@omd.lxd:local/share/check_mk/checkman/
 

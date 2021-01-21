@@ -75,7 +75,7 @@ def check_exim_mailq(item, params, info):
             length = int(line[0])
 
             if length == 0:
-                return (0, 'OK - The mailqueue is empty ', [ ('length', 0, params['warn_length'], params['crit_length']),
+                return (0, 'OK - The mailqueue is empty ', [ ('length', length, params['warn_length'], params['crit_length']),
                                                              ('size', 0, params['warn_size'], params['crit_size']),
                                                              ('age', 0, params['warn_age'], params['crit_age']) ])
             size = exim_mailq_to_bytes(line[1])
@@ -86,36 +86,36 @@ def check_exim_mailq(item, params, info):
             perfdata = []
 
             cur_state, thresh_out = 0, ''
-            if length >= params['length'][1]:
+            if length >= params['crit_length']:
                 cur_state = 2
                 thresh_out = '(!!)'
-            elif length >= params['length'][0]:
+            elif length >= params['warn_length']:
                 cur_state = 1
                 thresh_out = '(!)'
             output.append('Mailqueue length: %d%s' % (length, thresh_out))
-            perfdata.append(('length', length, params['length'][0], params['length'][1]))
+            perfdata.append(('length', length, params['warn_length'], params['crit_length']))
             state = max(state, cur_state)
 
             cur_state, thresh_out = 0, ''
-            if size >= params['size'][1]:
+            if size >= params['crit_size']:
                 cur_state = 2
                 thresh_out = '(!!)'
-            elif size >= params['size'][0]:
+            elif size >= params['warn_size']:
                 cur_state = 1
                 thresh_out = '(!)'
             output.append('Mailqueue size: %s%s' % (line[1], thresh_out))
-            perfdata.append(('size', size, params['size'][0], params['size'][1]))
+            perfdata.append(('size', size, params['warn_size'], params['crit_size']))
             state = max(state, cur_state)
 
             cur_state, thresh_out = 0, ''
-            if age >= params['age'][1]:
+            if age >= params['crit_age']:
                 cur_state = 2
                 thresh_out = '(!!)'
-            elif age >= params['age'][0]:
+            elif age >= params['warn_age']:
                 cur_state = 1
                 thresh_out = '(!)'
             output.append('Oldest mail: %s%s' % (line[2], thresh_out))
-            perfdata.append(('age', age, params['age'][0], params['age'][1]))
+            perfdata.append(('age', age, params['warn_age'], params['crit_age']))
             state = max(state, cur_state)
 
             statname = { 0: "OK", 1:"WARN", 2:"CRIT" }[state]
