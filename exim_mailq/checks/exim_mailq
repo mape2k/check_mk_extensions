@@ -95,10 +95,10 @@ def check_exim_mailq(item, params, info):
             cur_state, thresh_out = 0, ''
             if length >= params['crit_length']:
                 cur_state = 2
-                thresh_out = '(!!)'
+                thresh_out = '(!!) (above %s)' % params['crit_length']
             elif length >= params['warn_length']:
                 cur_state = 1
-                thresh_out = '(!)'
+                thresh_out = '(!) (above %s)' % params['warn_length']
             output.append('Mailqueue length: %d%s (limits %s, %s)' % (length, thresh_out, params['warn_length'], params['crit_length']))
             perfdata.append(('length', length, params['warn_length'], params['crit_length']))
             state = max(state, cur_state)
@@ -106,10 +106,10 @@ def check_exim_mailq(item, params, info):
             cur_state, thresh_out = 0, ''
             if size >= params['crit_size']:
                 cur_state = 2
-                thresh_out = '(!!)'
+                thresh_out = '(!!) (above %s)' % params['crit_size']
             elif size >= params['warn_size']:
                 cur_state = 1
-                thresh_out = '(!)'
+                thresh_out = '(!) (above %s)' % params['warn_size']
             output.append('Mailqueue size: %s%s (limits %s, %s bytes)' % (line[1], thresh_out, params['warn_size'], params['crit_size']))
             perfdata.append(('size', size, params['warn_size'], params['crit_size']))
             state = max(state, cur_state)
@@ -117,10 +117,10 @@ def check_exim_mailq(item, params, info):
             cur_state, thresh_out = 0, ''
             if age >= params['crit_age']:
                 cur_state = 2
-                thresh_out = '(!!)'
+                thresh_out = '(!!) (above %s)' % params['crit_age']
             elif age >= params['warn_age']:
                 cur_state = 1
-                thresh_out = '(!)'
+                thresh_out = '(!) (above %s)' % params['warn_age']
             output.append('Oldest mail: %s%s (limits %s, %s seconds)' % (line[2], thresh_out, params['warn_age'], params['crit_age']))
             perfdata.append(('age', age, params['warn_age'], params['crit_age']))
             state = max(state, cur_state)

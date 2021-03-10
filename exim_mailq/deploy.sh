@@ -23,6 +23,8 @@ checkman="checkman/exim_mailq"
 [[ "xprod" == "x$1" ]] && {
     # push to check_mk servers
     scp $checkname front@chk01.copyleft.no:local/share/check_mk/checks/
+    scp $watoplugin front@chk01.copyleft.no:local/share/check_mk/web/plugins/wato/
+    scp $checkman front@chk01.copyleft.no:local/share/check_mk/checkman/
     # Checks from front should be synced here over time, but this makes it faster:
     scp $checkname cl@omdproxy01.copyleft.no:/omd/sites/cl/local/share/check_mk/checks/
 
