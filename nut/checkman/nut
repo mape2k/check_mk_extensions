@@ -1,0 +1,16 @@
+title: Network UPS Tools
+agents: linux
+catalog: hw/power/generic
+author: Marcel Pennewiss <opensource@pennewiss.de>
+license: GPL
+distribution: check_mk
+description:
+ This check monitors health statistics of UPS units supported by Network UPS Tools.
+
+ Based on an old plugin from Daniel Karni.
+
+inventory:
+ Each UPS results in one service.
+
+item:
+ The name of the UPS.
