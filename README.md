@@ -1,1 +1,7 @@
-This repository contains check_mk plugins developed by EXA EDV GmbH and released to the general public.
+# checkmk Plugins
+
+This repository contains [checkmk](https://checkmk.com/) plugins released to the general public.
+
+## Repository structure
+
+The repository has multiple branches for the specific checkmk versions.
