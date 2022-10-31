@@ -1,0 +1,44 @@
+title: Checks the state of backup (rsync, tar, duply)
+agents: linux
+catalog: app/Backup
+author: Marcel Pennewiss <opensource@pennewiss.de>
+license: GPLv2
+distribution: check_mk
+description:
+ This check uses the output of the lnx_backup plugin sent by the linux 
+ agent of Check_MK and determine the following information:
+
+ - Exit-Code
+
+ - Start time 
+
+ - End time
+
+ - Duration
+
+ - Files (duply, rsync, tar)
+
+ - Filesize (duply, rsync)
+
+ - New Files (duply, rsync, tar)
+
+ - New Filesize (duply, rsync)
+
+ - Deleted Files (duply)
+
+ - Changed Files (duply)
+
+ - Changed Filesize (duply)
+
+ - Backup size (duply, rsync, tar)
+
+ - Errors (duply, tar)
+
+ The check will result in {WARNING} or {CRITICAL} if any of the information 
+ will be out of defined range (see Example for Parameters).
+
+inventory:
+ Each backup results in one service.
+
+item:
+ The name of the backup.

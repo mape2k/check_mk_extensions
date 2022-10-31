@@ -1,0 +1,14 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+#
+# (c) 2017 Marcel Pennewiss <opensource@pennewiss.de>
+
+def bake_lnx_backup(opsys, conf, conf_dir, plugins_dir):
+    if conf:
+        shutil.copy2(local_agents_dir + "/plugins/lnx_backup", plugins_dir + "/lnx_backup")
+        shutil.copy2(local_agents_dir + "/lnx_backup", agents_dir + "/lnx_backup")
+
+bakery_info["lnx_backup"] = {
+    "bake_function" : bake_lnx_backup,
+    "os"            : [ "linux", ],
+}

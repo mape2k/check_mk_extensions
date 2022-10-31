@@ -1,0 +1,149 @@
+#!/usr/bin/python
+# -*- encoding: utf-8; py-indent-offset: 4 -*-
+#
+# (c) 2017 Marcel Pennewiss <opensource@pennewiss.de>
+
+#<<<lnx_backup>>>
+#==> MyBackup <==
+#start_time 1375215766
+#end_time 1375215778
+#exit_code 0
+#source_files 148
+#source_filesize 16134234
+#new_files 15
+#new_filesize 44438
+#deleted_files 4
+#changed_files 9
+#changed_filesize 94353
+#backup_size 12139
+#errors 0
+
+import datetime
+
+lnx_backup_default_levels = {
+   'age':              (93600, 180000),
+   'source_files':     (0,  0),
+   'source_filesize':  (0,  0),
+   'new_files':        (0,  0),
+   'new_filesize':     (0,  0),
+   'deleted_files':    (0,  0),
+   'changed_files':    (0,  0),
+   'changed_filesize': (0,  0),
+   'backup_size':      (1024, 2048),
+   'errors':           (1,  1),
+   'exit_code':        (1,  1),
+}
+
+def inventory_lnx_backup(info):
+    return [ (' '.join(l[1:-1]), None, 'lnx_backup_default_levels') for l in info if l[0] == '==>' ]
+
+def lnx_backup_parse(item, info):
+    found = False
+    data = {}
+    for line in info:
+        if ' '.join(line[1:-1]) == item:
+            found = True
+
+        elif found and line[0] == '==>':
+            break # Stop at next section
+
+        elif found and len(line) == 2:
+            key, val = line
+            # Convert several keys/values
+            if key in [ 'start_time', 'end_time' ]:
+                val = datetime.datetime.fromtimestamp(int(val))
+            elif key in [ 'exit_code', 'source_files', 'new_files', 'deleted_files', 'changed_files', 'errors' ]:
+                val = int(val)
+            elif key in [ 'source_filesize', 'new_filesize', 'deleted_filesize', 'changed_filesize', 'backup_size' ]:
+                #key = key.replace('kbytes', 'bytes')
+                val = int(val)
+            data[key] = val
+
+    # calc backup duration
+    delta = data['end_time']-data['start_time']
+    data['duration'] = delta.seconds
+
+    return data
+
+def check_lnx_backup(item, params, info):
+    backup = lnx_backup_parse(item, info)
+    if not backup:
+        return 3, 'Got no information for this backup'
+
+    state = 0
+    output = []
+    perfdata = []
+
+    cur_state, thresh_out = 0, ''
+    if backup['exit_code'] >= params['exit_code'][1]:
+        cur_state = 2
+        thresh_out = '(!!)'
+    elif backup['exit_code'] == params['exit_code'][0]:
+        cur_state = 1
+        thresh_out = '(!)'
+    output.append('Exit-Code: %d%s' % (backup['exit_code'], thresh_out))
+    state = max(state, cur_state)
+
+    output.append('Started: %s' % backup['start_time'].strftime('%Y-%m-%d %H:%M:%S'))
+
+    # check end_time thresh
+    cur_state, thresh_out = 0, ''
+    delta_end_time = datetime.datetime.now() - backup['end_time']
+    age = delta_end_time.seconds + delta_end_time.days * 86400
+    if age >= params['age'][1]:
+        cur_state = 2
+        thresh_out = '(!!)'
+    elif age >= params['age'][0]:
+        cur_state = 1
+        thresh_out = '(!)'
+    output.append('Ended: %s%s' % (backup['end_time'].strftime('%Y-%m-%d %H:%M:%S'), thresh_out))
+    state = max(state, cur_state)
+
+    for key, title, value in [
+        ('duration',               'Backup duration',         backup['duration']),
+        ('source_files',           'Files',                   backup['source_files']),
+        ('source_filesize',        'Filesize',                backup['source_filesize']),
+        ('new_files',              'New Files',               backup['new_files']),
+        ('new_filesize',           'New Filesize',            backup['new_filesize']),
+        ('deleted_files',          'Deleted Files',           backup['deleted_files']),
+        ('changed_files',          'Changed Files',           backup['changed_files']),
+        ('changed_filesize',       'Changed Filesize',        backup['changed_filesize']),
+        ('backup_size',            'Backup size',             backup['backup_size']),
+        ('errors',                 'Errors',                  backup['errors']),
+      ]:
+        if key in [ 'source_filesize', 'new_filesize', 'changed_filesize', 'backup_size' ]:
+            display_value = get_bytes_human_readable(value, 1000)
+        elif key in [ 'duration' ]:
+            display_value = get_age_human_readable(value)
+        else:
+            display_value = value
+
+        cur_state, thresh_out = 0, ''
+        if key in [ 'errors' ]:
+            if key in params and value >= params[key][0]:
+                cur_state = 2
+                thresh_out = '(!!)'
+            elif key in params and value >= params[key][1]:
+                cur_state = 1
+                thresh_out = '(!)'
+        else:
+            if key in params and value < params[key][0]:
+                cur_state = 2
+                thresh_out = '(!!)'
+            elif key in params and value < params[key][1]:
+                cur_state = 1
+                thresh_out = '(!)'
+
+        output.append('%s: %s%s' % (title, display_value, thresh_out))
+        perfdata.append((key, value))
+        state = max(state, cur_state)
+
+    return state, ', '.join(output), perfdata
+
+check_info["lnx_backup"] = {
+    'check_function':          check_lnx_backup,
+    'inventory_function':      inventory_lnx_backup,
+    'service_description':     'Backup %s',
+    'group':                   'lnx_backup',
+    'has_perfdata':            True,
+}

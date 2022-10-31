@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# Get information about monitored backups
+if cd /var/lib/check_mk_agent/lnx_backup;
+then
+  echo '<<<lnx_backup>>>'
+  head -n -0 -v *
+fi
