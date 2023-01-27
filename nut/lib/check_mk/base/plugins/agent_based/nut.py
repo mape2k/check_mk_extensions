@@ -190,7 +190,7 @@ def check_nut(item: str, params: Mapping[str, Any], section: Section) -> type_de
 
         # Calculate real voltage
         if metric == 'battery_voltage':
-            upsData[metric] = upsData[metric] * upsData['battery_packs']
+            upsData[metric] = upsData[metric] * upsData.get('battery_packs', 1)
 
         yield from check_levels(
             upsData[metric],
