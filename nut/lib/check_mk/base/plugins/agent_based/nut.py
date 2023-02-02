@@ -101,9 +101,10 @@ def nut_parse(string_table: type_defs.StringTable) -> Section:
             upsName = " ".join(string_table[idx][1:-1])
             parsed[upsName] = {}
 
-        elif len(line) == 2:
+        elif len(line) >= 2:
             # Found key value pair
-            key, val = line
+            key = line[0]
+            val = " ".join(line[1:])
             
             # Fix key
             key = key.replace('.', '_').replace(':', '')
@@ -121,7 +122,8 @@ def nut_parse(string_table: type_defs.StringTable) -> Section:
 
 def discover_nut(section: Section) -> type_defs.DiscoveryResult:
     for upsname, upsdata in section.items():
-        yield Service(item=upsname)
+        if len(upsdata) > 0:
+            yield Service(item=upsname)
 
 
 _METRIC_SPECS: Mapping[str, Tuple[str, Callable, bool, bool, bool]] = {
