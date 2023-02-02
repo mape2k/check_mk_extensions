@@ -115,11 +115,6 @@ def nut_parse(string_table: type_defs.StringTable) -> Section:
                 parsed[upsName][key] = int(val)
             elif key in [ 'ups_status', 'ups_beeper_status' ]:
                 parsed[upsName][key] = val
-            #elif key in [ 'ups_beeper_status']:
-            #    if val == 'enabled':
-            #        upsData[key] = True
-            #    else:
-            #        upsData[key] = False
 
     return parsed
 
@@ -138,7 +133,6 @@ _METRIC_SPECS: Mapping[str, Tuple[str, Callable, bool, bool, bool]] = {
     'input_voltage': ('Input voltage', lambda v: "%0.2f V" % v, True, True, True),
     'input_voltage_fault': ('Input voltage (fault)', lambda v: "%0.2f V" % v, True, False, True),
     'output_voltage': ('Output voltage', lambda v: "%.2f V" % v, True, True, True),
-    #'ups_beeper_status': ('Beeper', str, True, False, False),
     'ups_load': ('Load', render.percent, False, True, True),
     'ups_temperature': ('Temperature', lambda v: "%0.1f °C" % v, True, False, True),
 }
@@ -160,7 +154,6 @@ def check_nut(item: str, params: Mapping[str, Any], section: Section) -> type_de
     )
 
     # Check Beeper status
-    print(params.get('ups_beeper_status'))
     if upsData['ups_beeper_status'] != params.get('ups_beeper_status'):
         yield Result(
             state=State.CRIT,
