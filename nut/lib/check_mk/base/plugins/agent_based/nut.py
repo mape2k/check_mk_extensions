@@ -93,14 +93,13 @@ Section = Dict[str, UpsData]
 
 def nut_parse(string_table: type_defs.StringTable) -> Section:
     parsed: Section = {}
-    upsData: UpsData = {}
 
     for idx, line in enumerate(string_table):
 
         if line[0] == "==>" and line[-1] == "<==":
             # Found section beginning
             upsName = " ".join(string_table[idx][1:-1])
-            upsDdata = parsed.setdefault(upsName, upsData)
+            parsed[upsName] = {}
 
         elif len(line) == 2:
             # Found key value pair
@@ -111,16 +110,11 @@ def nut_parse(string_table: type_defs.StringTable) -> Section:
 
             # Convert several keys/values
             if key in [ 'battery_charge', 'battery_voltage', 'input_frequency', 'input_voltage', 'input_voltage_fault', 'output_voltage', 'ups_temperature' ]:
-                upsData[key] = float(val)
+                parsed[upsName][key] = float(val)
             elif key in [ 'battery_packs', 'battery_runtime', 'ups_load']:
-                upsData[key] = int(val)
+                parsed[upsName][key] = int(val)
             elif key in [ 'ups_status', 'ups_beeper_status' ]:
-                upsData[key] = val
-            #elif key in [ 'ups_beeper_status']:
-            #    if val == 'enabled':
-            #        upsData[key] = True
-            #    else:
-            #        upsData[key] = False
+                parsed[upsName][key] = val
 
     return parsed
 
@@ -139,7 +133,6 @@ _METRIC_SPECS: Mapping[str, Tuple[str, Callable, bool, bool, bool]] = {
     'input_voltage': ('Input voltage', lambda v: "%0.2f V" % v, True, True, True),
     'input_voltage_fault': ('Input voltage (fault)', lambda v: "%0.2f V" % v, True, False, True),
     'output_voltage': ('Output voltage', lambda v: "%.2f V" % v, True, True, True),
-    #'ups_beeper_status': ('Beeper', str, True, False, False),
     'ups_load': ('Load', render.percent, False, True, True),
     'ups_temperature': ('Temperature', lambda v: "%0.1f °C" % v, True, False, True),
 }
@@ -161,7 +154,6 @@ def check_nut(item: str, params: Mapping[str, Any], section: Section) -> type_de
     )
 
     # Check Beeper status
-    print(params.get('ups_beeper_status'))
     if upsData['ups_beeper_status'] != params.get('ups_beeper_status'):
         yield Result(
             state=State.CRIT,
