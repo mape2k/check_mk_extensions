@@ -93,14 +93,13 @@ Section = Dict[str, UpsData]
 
 def nut_parse(string_table: type_defs.StringTable) -> Section:
     parsed: Section = {}
-    upsData: UpsData = {}
 
     for idx, line in enumerate(string_table):
 
         if line[0] == "==>" and line[-1] == "<==":
             # Found section beginning
             upsName = " ".join(string_table[idx][1:-1])
-            upsDdata = parsed.setdefault(upsName, upsData)
+            parsed[upsName] = {}
 
         elif len(line) == 2:
             # Found key value pair
@@ -111,11 +110,11 @@ def nut_parse(string_table: type_defs.StringTable) -> Section:
 
             # Convert several keys/values
             if key in [ 'battery_charge', 'battery_voltage', 'input_frequency', 'input_voltage', 'input_voltage_fault', 'output_voltage', 'ups_temperature' ]:
-                upsData[key] = float(val)
+                parsed[upsName][key] = float(val)
             elif key in [ 'battery_packs', 'battery_runtime', 'ups_load']:
-                upsData[key] = int(val)
+                parsed[upsName][key] = int(val)
             elif key in [ 'ups_status', 'ups_beeper_status' ]:
-                upsData[key] = val
+                parsed[upsName][key] = val
             #elif key in [ 'ups_beeper_status']:
             #    if val == 'enabled':
             #        upsData[key] = True
