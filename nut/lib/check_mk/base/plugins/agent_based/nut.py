@@ -78,14 +78,14 @@ Metrics = Dict[str, int]
 class UpsData(TypedDict, total=False):
     battery_charge: float
     battery_packs: int
-    battery_runtime: int
+    battery_runtime: float
     battery_voltage: float
     input_frequency: float
     input_voltage: float
     input_voltage_fault: float
     output_voltage: float
     ups_beeper_status: str
-    ups_load: int
+    ups_load: float
     ups_temperature: float
 
 
@@ -110,9 +110,9 @@ def nut_parse(string_table: type_defs.StringTable) -> Section:
             key = key.replace('.', '_').replace(':', '')
 
             # Convert several keys/values
-            if key in [ 'battery_charge', 'battery_voltage', 'input_frequency', 'input_voltage', 'input_voltage_fault', 'output_voltage', 'ups_temperature' ]:
+            if key in [ 'battery_charge', 'battery_runtime', 'battery_voltage', 'input_frequency', 'input_voltage', 'input_voltage_fault', 'output_voltage', 'ups_load', 'ups_temperature' ]:
                 parsed[upsName][key] = float(val)
-            elif key in [ 'battery_packs', 'battery_runtime', 'ups_load']:
+            elif key in [ 'battery_packs' ]:
                 parsed[upsName][key] = int(val)
             elif key in [ 'ups_status', 'ups_beeper_status' ]:
                 parsed[upsName][key] = val
@@ -156,10 +156,10 @@ def check_nut(item: str, params: Mapping[str, Any], section: Section) -> type_de
     )
 
     # Check Beeper status
-    if upsData['ups_beeper_status'] != params.get('ups_beeper_status'):
+    if upsData.get('ups_beeper_status', 'disabled') != params.get('ups_beeper_status'):
         yield Result(
             state=State.CRIT,
-            summary="Beeper: %s" % upsData['ups_beeper_status']
+            summary="Beeper: %s" % upsData.get('ups_beeper_status', 'disabled')
         )
 
     # Check all metrics
