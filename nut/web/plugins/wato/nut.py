@@ -24,6 +24,7 @@ from cmk.gui.valuespec import (
     ListOf,
     Integer,
     MonitoringState,
+    Float,
 )
 
 from cmk.gui.plugins.wato import (
