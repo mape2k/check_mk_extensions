@@ -19,12 +19,12 @@ from cmk.gui.valuespec import (
     Age,
     Dictionary,
     DropdownChoice,
-    TextAscii,
-    Tuple,
-    ListOf,
-    Integer,
-    MonitoringState,
     Float,
+    Integer,
+    ListOf,
+    MonitoringState,
+    TextAscii,
+    Tuple
 )
 
 from cmk.gui.plugins.wato import (
