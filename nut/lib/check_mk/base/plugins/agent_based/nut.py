@@ -2,6 +2,7 @@
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 
 # (c) 2022 Marcel Pennewiss <opensource@pennewiss.de>
+# (c) 2023 Christian Kreidl <christian.kreidl@ziti.uni-heidelberg.de>
 
 # This is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
@@ -150,10 +151,35 @@ def check_nut(item: str, params: Mapping[str, Any], section: Section) -> type_de
         )
         return
 
-    yield Result(
-        state=State.OK,
-        summary="Status: %s" % upsData['ups_status']
-    )
+    for status in upsData['ups_status'].split():
+        if status == 'OL':
+                yield Result( state=State.OK, summary="Status: Online (OL)")
+        elif status == 'CHRG':
+                yield Result( state=State.OK, summary="Status: Charging (CHRG)")
+        elif status == 'OB':
+                yield Result( state=State.WARN, summary="Status: On Battery (OB)")
+        elif status == 'CAL':
+                yield Result( state=State.WARN, summary="Status: Calibrating (CAL)")
+        elif status == 'DISCHRG':
+                yield Result( state=State.WARN, summary="Status: Discharging (DISCHRG)")
+        elif status == 'BYPASS':
+                yield Result( state=State.WARN, summary="Status: Bypass (BYPASS)")
+        elif status == 'RB':
+                yield Result( state=State.WARN, summary="Status: Replace Battery (RB)")
+        elif status == 'HB':
+                yield Result( state=State.WARN, summary="Status: High Battery (HB)")
+        elif status == 'TRIM':
+                yield Result( state=State.WARN, summary="Status: trimming incoming voltage (TRIM)")
+        elif status == 'BOOST':
+                yield Result( state=State.WARN, summary="Status: boosting incoming voltage (BOOST)")
+        elif status == 'LB':
+                yield Result( state=State.CRIT, summary="Status: Low Battery (LB)")
+        elif status == 'OVER':
+                yield Result( state=State.CRIT, summary="Status: Overloaded (OVER)")
+        elif status == 'OFF':
+                yield Result( state=State.CRIT, summary="Status: Switched OFF (OFF)")
+        else:
+                yield Result( state=State.UNKNOWN, summary="unknown status: %s" % status )
 
     # Check Beeper status
     if upsData.get('ups_beeper_status', 'disabled') != params.get('ups_beeper_status'):
