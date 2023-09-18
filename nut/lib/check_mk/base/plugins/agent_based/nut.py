@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 
-# (c) 2022 Marcel Pennewiss <opensource@pennewiss.de>
+# (c) 2022-2023 Marcel Pennewiss <opensource@pennewiss.de>
+
+# Contributions:
+# Christian Kreidl (christian.kreidl@ziti.uni-heidelberg.de)
+# Marco (github.com/Marco98)
 
 # This is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
@@ -91,6 +95,7 @@ class UpsData(TypedDict, total=False):
 
 Section = Dict[str, UpsData]
 
+
 def nut_parse(string_table: type_defs.StringTable) -> Section:
     parsed: Section = {}
 
@@ -105,7 +110,7 @@ def nut_parse(string_table: type_defs.StringTable) -> Section:
             # Found key value pair
             key = line[0]
             val = " ".join(line[1:])
-            
+
             # Fix key
             key = key.replace('.', '_').replace(':', '')
 
@@ -140,6 +145,25 @@ _METRIC_SPECS: Mapping[str, Tuple[str, Callable, bool, bool, bool]] = {
 }
 
 
+_STATUS_SPECS: Mapping[str, Tuple[State, str]] = {
+    # 'Status': (State, 'State summary')
+    # based on https://github.com/networkupstools/nut/blob/master/docs/new-drivers.txt ("Status data")
+    'OL': (State.OK, 'On line'),
+    'OB': (State.WARN, 'On battery'),
+    'LB': (State.CRIT, 'Low battery'),
+    'HB': (State.WARN, 'High battery'),
+    'RB': (State.WARN, 'Replace battery'),
+    'CHRG': (State.OK, 'Charging'),
+    'DISCHRG': (State.WARN, 'Discharging'),
+    'BYPASS': (State.WARN, 'Bypass'),
+    'CAL': (State.WARN, 'Calibrating'),
+    'OFF': (State.CRIT, 'Switched off'),
+    'OVER': (State.CRIT, 'Overloaded'),
+    'TRIM': (State.WARN, 'Trimming incoming voltage'),
+    'BOOST': (State.WARN, 'Boosting incoming voltage'),
+}
+
+
 def check_nut(item: str, params: Mapping[str, Any], section: Section) -> type_defs.CheckResult:
 
     upsData = section.get(item)
@@ -150,10 +174,17 @@ def check_nut(item: str, params: Mapping[str, Any], section: Section) -> type_de
         )
         return
 
-    yield Result(
-        state=State.OK,
-        summary="Status: %s" % upsData['ups_status']
-    )
+    for status in upsData['ups_status'].split():
+        if status in _STATUS_SPECS:
+            yield Result(
+                state=_STATUS_SPECS[status][0],
+                summary="Status: %s (%s)" % (_STATUS_SPECS[status][1], status)
+            )
+        else:
+            yield Result(
+                state=State.UNKNOWN,
+                summary="Unknown status: %s" % status
+            )
 
     # Check Beeper status
     if upsData.get('ups_beeper_status', 'disabled') != params.get('ups_beeper_status'):
@@ -175,7 +206,7 @@ def check_nut(item: str, params: Mapping[str, Any], section: Section) -> type_de
                 levels_lower = params.get(metric)[:2]
             else:
                 levels_lower = params.get(metric)
-        
+
         if _METRIC_SPECS[metric][4]:
             if len(params.get(metric)) == 4:
                 levels_upper = params.get(metric)[2:]
