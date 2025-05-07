@@ -2,6 +2,7 @@
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 
 # (c) 2022 Marcel Pennewiss <opensource@pennewiss.de>
+# (c) 2025 Erik Stomp <mail@erik-stomp.de> - Updated Plugin to API v2
 
 # This is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
@@ -14,6 +15,11 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# <<<exim_mailq>>>
+#     2     668     44m     43m  TOTAL
+# <<<exim_mailq>>>
+#     4   252KB     61m      0m  TOTAL
+
 import time
 from typing import (
     Any,
@@ -24,33 +30,16 @@ from typing import (
     #TypedDict,
     Tuple,
 )
-from .agent_based_api.v1 import (
-    check_levels,
-    register,
-    render,
-    type_defs,
-    #Metric,
-    Result,
-    Service,
-    #ServiceLabel,
-    State,
-)
-#import datetime
-
-# <<<exim_mailq>>>
-#     2     668     44m     43m  TOTAL
-# <<<exim_mailq>>>
-#     4   252KB     61m      0m  TOTAL
-
+from cmk.agent_based.v2 import AgentSection, CheckPlugin, Service, Result, State, Metric, check_levels, StringTable, DiscoveryResult, CheckResult
+from cmk.agent_based.v2.render import bytes, timespan
 
 _METRIC_SPECS: Mapping[str, Tuple[str, Callable, bool, bool, bool]] = {
     # 'metric': ('Metric Name', renderer, notice_only, Levels are lower levels, Levels are upper levels)
     'length': ('Length', str, False, False, True),
-    'size': ('Size', render.bytes, False, False, True),
-    'age_oldest': ('Oldest mail', render.timespan, False, False, True),
-    'age_newest': ('Newest mail', render.timespan, True, False, False),
+    'size': ('Size', bytes, False, False, True),
+    'age_oldest': ('Oldest mail', timespan, False, False, True),
+    'age_newest': ('Newest mail', timespan, True, False, False),
 }
-
 
 def _exim_mailq_to_bytes(value):
     if value[-1].isdigit():
@@ -79,9 +68,7 @@ def _exim_mailq_to_seconds(value):
     elif uom == 'd':
         return time * 60 * 60 * 24
 
-
-def exim_mailq_parse(string_table: type_defs.StringTable):
-
+def parse_exim_mailq(string_table: StringTable):
     if len(string_table[0]) != 5:
         return {}
 
@@ -95,14 +82,10 @@ def exim_mailq_parse(string_table: type_defs.StringTable):
 
     return exim_mailq
 
+def discover_exim_mailq(section) -> DiscoveryResult:
+    yield Service()
 
-def discover_exim_mailq(section) -> type_defs.DiscoveryResult:
-    if section:
-        yield Service()
-
-
-def check_exim_mailq(params: Mapping[str, Any], section) -> type_defs.CheckResult:
-
+def check_exim_mailq(params: Mapping[str, Any], section) -> CheckResult:
     if 'length' not in section:
         yield Result(
             state=State.UNKNOWN,
@@ -123,23 +106,16 @@ def check_exim_mailq(params: Mapping[str, Any], section) -> type_defs.CheckResul
             boundaries=(0, None),
         )
 
-
-register.agent_section(
+agent_section_exim_mailq = AgentSection(
     name = "exim_mailq",
-    parse_function = exim_mailq_parse
+    parse_function = parse_exim_mailq,
 )
 
-
-register.check_plugin(
+check_plugin_exim_mailq = CheckPlugin(
     name = "exim_mailq",
-    service_name = "Exim Queue",
-    sections=["exim_mailq"],
+    service_name = "exim mail queue content",
     discovery_function = discover_exim_mailq,
     check_function = check_exim_mailq,
-    check_default_parameters = {
-        'length':           (10, 20),
-        'size':             (1048576, 2097152),
-        'age_oldest':       (3600, 7200),
-    },
-    check_ruleset_name="exim_mailq",
+    check_default_parameters = {"length": ("fixed", (5, 10)), "size": ("fixed", ((1024**2), 2*(1024**2))), "age_oldest": ("fixed", (3600, 7200))},
+    check_ruleset_name = "exim_mailq",
 )

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-
-# (c) 2022 Marcel Pennewiss <opensource@pennewiss.de>
+# -*- coding: utf-8 -*-
+# (c) 2025 Erik Stomp <mail@erik-stomp.de>
 
 # This is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
@@ -14,11 +13,23 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from cmk.gui.plugins.metrics import perfometer_info
+from pathlib import Path
 
-perfometer_info.append({
-    "type": "logarithmic",
-    "metric": "exim_mailq_length",
-    "half_value": 120.0,
-    "exponent": 2,
-})
+from .bakery_api.v1 import (
+    OS,
+    Plugin,
+    register,
+    FileGenerator,
+)
+
+def get_exim_mailq_plugin_files() -> FileGenerator:
+
+    yield Plugin(
+        base_os = OS.LINUX,
+        source = Path('exim_mailq'),
+    )
+
+register.bakery_plugin(
+    name = "exim_mailq",
+    files_function = get_exim_mailq_plugin_files
+)

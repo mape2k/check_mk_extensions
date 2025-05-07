@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-# -*- encoding: utf-8; py-indent-offset: 4 -*-
-
-# (c) 2022 Marcel Pennewiss <opensource@pennewiss.de>
+# -*- coding: utf-8 -*-
+# (c) 2025 Erik Stomp <mail@erik-stomp.de>
 
 # This is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
@@ -14,29 +13,18 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics import metric_info
+from cmk.rulesets.v1 import Title
+from cmk.rulesets.v1.form_specs import Dictionary
+from cmk.rulesets.v1.rule_specs import AgentConfig, Topic
 
-metric_info["exim_mailq_length"] = {
-    "title": _("Length"),
-    "unit": "count",
-    "color": "13/a",
-}
+def _parameter_form_bakery():
+    return Dictionary(
+        elements = {}
+    )
 
-metric_info["exim_mailq_size"] = {
-    "title": _("Size"),
-    "unit": "bytes",
-    "color": "22/a",
-}
-
-metric_info["exim_mailq_age_oldest"] = {
-    "title": _("Oldest mail"),
-    "unit": "s",
-    "color": "44/a",
-}
-
-metric_info["exim_mailq_age_newest"] = {
-    "title": _("Newest mail"),
-    "unit": "s",
-    "color": "44/b",
-}
+rule_spec_exim_mailq_bakery = AgentConfig(
+    name = "exim_mailq",
+    title = Title("Exim mail queue plugin"),
+    topic = Topic.GENERAL,
+    parameter_form = _parameter_form_bakery,
+)
