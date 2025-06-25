@@ -2,9 +2,9 @@
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 
 # (c) 2022-2023 Marcel Pennewiss <opensource@pennewiss.de>
+# (c) 2025 Christian Kreidl <christian.kreidl@ziti.uni-heidelberg.de>
 
 # Contributions:
-# Christian Kreidl (christian.kreidl@ziti.uni-heidelberg.de)
 # Marco (github.com/Marco98)
 
 # This is free software;  you can redistribute it and/or modify it
@@ -26,18 +26,23 @@ from typing import (
     Mapping,
     Optional,
     TypedDict,
+    TypeVar,
     Tuple,
+    Generic,
 )
-from .agent_based_api.v1 import (
-    check_levels,
-    register,
+from cmk.agent_based.v2 import (
     render,
-    type_defs,
-    Metric,
-    Result,
+    AgentSection,
+    CheckPlugin,
     Service,
-    ServiceLabel,
+    Result,
     State,
+    Metric,
+    LevelsT,
+    check_levels,
+    StringTable,
+    DiscoveryResult,
+    CheckResult
 )
 import datetime
 
@@ -76,7 +81,11 @@ import datetime
 # demo_ups ups.type: online
 # demo_ups ups.vendorid: 06da
 
-Metrics = Dict[str, int]
+_NumberT = TypeVar("_NumberT", int, float)
+
+class _DualLevels(TypedDict, Generic[_NumberT]):
+    upper: LevelsT[_NumberT]
+    lower: LevelsT[_NumberT]
 
 
 class UpsData(TypedDict, total=False):
@@ -96,7 +105,7 @@ class UpsData(TypedDict, total=False):
 Section = Dict[str, UpsData]
 
 
-def nut_parse(string_table: type_defs.StringTable) -> Section:
+def nut_parse(string_table: StringTable) -> Section:
     parsed: Section = {}
 
     for idx, line in enumerate(string_table):
@@ -125,7 +134,7 @@ def nut_parse(string_table: type_defs.StringTable) -> Section:
     return parsed
 
 
-def discover_nut(section: Section) -> type_defs.DiscoveryResult:
+def discover_nut(section: Section) -> DiscoveryResult:
     for upsname, upsdata in section.items():
         if len(upsdata) > 0:
             yield Service(item=upsname)
@@ -164,8 +173,7 @@ _STATUS_SPECS: Mapping[str, Tuple[State, str]] = {
 }
 
 
-def check_nut(item: str, params: Mapping[str, Any], section: Section) -> type_defs.CheckResult:
-
+def check_nut(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
     upsData = section.get(item)
     if upsData is None:
         yield Result(
@@ -200,18 +208,18 @@ def check_nut(item: str, params: Mapping[str, Any], section: Section) -> type_de
         if metric not in _METRIC_SPECS:
             continue
 
-        # Get lower levels
+        # level is lower
         if _METRIC_SPECS[metric][3]:
-            if len(params.get(metric)) == 4:
-                levels_lower = params.get(metric)[:2]
-            else:
                 levels_lower = params.get(metric)
 
+        # level is upper
         if _METRIC_SPECS[metric][4]:
-            if len(params.get(metric)) == 4:
-                levels_upper = params.get(metric)[2:]
-            else:
                 levels_upper = params.get(metric)
+
+        # level has upper and lower
+        if _METRIC_SPECS[metric][3] and _METRIC_SPECS[metric][4]:
+                levels_upper = params.get(metric).get("upper")
+                levels_lower = params.get(metric).get("lower")
 
         # Calculate real voltage
         if metric == 'battery_voltage':
@@ -229,28 +237,40 @@ def check_nut(item: str, params: Mapping[str, Any], section: Section) -> type_de
         )
 
 
-register.agent_section(
+agent_section_nut = AgentSection(
     name = "nut",
     parse_function = nut_parse
 )
 
 
-register.check_plugin(
+check_plugin_nut = CheckPlugin(
     name = "nut",
     service_name = "UPS %s",
     discovery_function = discover_nut,
     check_function = check_nut,
     check_default_parameters = {
-        'battery_charge': (90, 85),
-        'battery_runtime': (1200, 900),
-        'battery_voltage': (10, 5),
-        'input_frequency': (45, 49, 51, 55),
-        'input_voltage': (0, 0, 245, 250),
-        'input_voltage_fault': (155, 160),
-        'output_voltage': (0, 0, 245, 250),
+        'battery_charge': ( "fixed", (90, 85)),
+        'battery_runtime': ( "fixed", (1200, 900)),
+        'battery_voltage': ( "fixed", (10.0, 5.0)),
+        'input_frequency': _DualLevels(
+                    lower=("fixed", (49.0, 45.0)),
+                    upper=("fixed", (51.0, 55.0)),
+            ),
+        'input_voltage': _DualLevels(
+                    lower=("fixed", (0.0, 0.0)),
+                    upper=("fixed", (245.0, 250.0)),
+            ),
+        'input_voltage_fault': ( "fixed", (155.0, 160.0)),
+        'output_voltage': _DualLevels(
+                    lower=("fixed", (0.0, 0.0)),
+                    upper=("fixed", (245.0, 250.0)),
+            ),
         'ups_beeper_status': 'disabled',
-        'ups_load': (0, 0, 50, 70),
-        'ups_temperature': (35, 40),
+        'ups_load': _DualLevels(
+                    lower=("fixed", (0.0, 0.0)),
+                    upper=("fixed", (50.0, 70.0)),
+            ),
+        'ups_temperature': ( "fixed", (35.0, 40.0)),
     },
     check_ruleset_name="nut",
 )
