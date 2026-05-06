@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 
-# (c) 2022 Marcel Pennewiss <opensource@pennewiss.de>
+# (c) 2026 Marcel Pennewiss <opensource@pennewiss.de>
 
 # This is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
@@ -14,29 +14,54 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics import metric_info
 
-metric_info["exim_mailq_length"] = {
-    "title": _("Length"),
-    "unit": "count",
-    "color": "13/a",
-}
+from cmk.graphing.v1 import Title
+from cmk.graphing.v1.metrics import (
+    AutoPrecision,
+    Color,
+    DecimalNotation,
+    Metric,
+    SINotation,
+    StrictPrecision,
+    TimeNotation,
+    Unit,
+)
+from cmk.graphing.v1.perfometers import (
+    Closed,
+    FocusRange,
+    Perfometer,
+)
 
-metric_info["exim_mailq_size"] = {
-    "title": _("Size"),
-    "unit": "bytes",
-    "color": "22/a",
-}
+metric_exim_mailq_length = Metric(
+    name="exim_mailq_length",
+    title=Title("Mails in outgoing mail queue"),
+    unit=Unit(DecimalNotation(''), StrictPrecision(0)),
+    color=Color.RED,
+)
 
-metric_info["exim_mailq_age_oldest"] = {
-    "title": _("Oldest mail"),
-    "unit": "s",
-    "color": "44/a",
-}
+metric_exim_mailq_size = Metric(
+    name="exim_mailq_size",
+    title=Title("Mailsize in outgoing mail queue"),
+    unit=Unit(SINotation('bytes'), AutoPrecision(2)),
+    color=Color.YELLOW,
+)
 
-metric_info["exim_mailq_age_newest"] = {
-    "title": _("Newest mail"),
-    "unit": "s",
-    "color": "44/b",
-}
+metric_exim_mailq_age_oldest = Metric(
+    name="exim_mailq_age_oldest",
+    title=Title("Oldest mail"),
+    unit=Unit(TimeNotation()),
+    color=Color.LIGHT_BLUE,
+)
+
+metric_exim_mailq_age_newest = Metric(
+    name="exim_mailq_age_newest",
+    title=Title("Newest mail"),
+    unit=Unit(TimeNotation()),
+    color=Color.BLUE,
+)
+
+perfometer_exim_mailq = Perfometer(
+    name="exim_mailq",
+    focus_range=FocusRange(Closed(0), Closed(100)),
+    segments=["exim_mailq_length"],
+)

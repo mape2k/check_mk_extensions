@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 
-# (c) 2022 Marcel Pennewiss <opensource@pennewiss.de>
+# (c) 2026 Marcel Pennewiss <opensource@pennewiss.de>
 
 # This is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
@@ -14,63 +14,88 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Age,
+from cmk.rulesets.v1 import (
+    Help,
+    Title,
+)
+from cmk.rulesets.v1.form_specs import (
+    DataSize,
+    DictElement,
     Dictionary,
-    DropdownChoice,
-    TextAscii,
-    Tuple,
-    ListOf,
+    IECMagnitude,
+    InputHint,
     Integer,
-    MonitoringState,
+    LevelDirection,
+    migrate_to_upper_integer_levels,
+    migrate_to_upper_float_levels,
+    SimpleLevels,
+    TimeMagnitude,
+    TimeSpan,
+)
+from cmk.rulesets.v1.rule_specs import (
+    CheckParameters,
+    HostCondition,
+    Topic,
 )
 
-from cmk.gui.plugins.wato import (
-    rulespec_registry,
-    CheckParameterRulespecWithoutItem,
-    RulespecGroupCheckParametersApplications,
+
+def _parameter_form_exim_mailq():
+
+    return Dictionary(
+        title=Title("Limits"),
+        help_text=Help("Limits for exim mail queue"),
+        elements={
+            "length": DictElement(
+                required = False,
+                parameter_form=SimpleLevels(
+                    title=Title("Mails in outgoing mail queue"),
+                    migrate=migrate_to_upper_integer_levels,
+                    help_text=Help("Set the levels for the maximum number of E-Mails currently in the mail queue."),
+                    form_spec_template=Integer(
+                        unit_symbol="mails",
+                    ),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=InputHint(value=(10, 20)),
+                ),
+            ),
+            "size": DictElement(
+                required = False,
+                parameter_form=SimpleLevels(
+                    title=Title("Mailsize in outgoing mail queue"),
+                    migrate=migrate_to_upper_integer_levels,
+                    help_text=Help("Set the levels for the maximum size of all E-Mails in the mail queue."),
+                    form_spec_template=DataSize(
+                        displayed_magnitudes=[
+                            IECMagnitude.BYTE,
+                            IECMagnitude.KIBI,
+                            IECMagnitude.MEBI,
+                        ]
+                    ),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=InputHint(value=(1024**2, 2*(1024**2))),
+                ),
+            ),
+            "age_oldest": DictElement(
+                required = False,
+                parameter_form=SimpleLevels(
+                    title=Title("Age of oldest mail"),
+                    migrate=migrate_to_upper_float_levels,
+                    help_text=Help("Set the levels for the maximum age of the oldest E-Mail in the mail queue."),
+                    form_spec_template=TimeSpan(
+                        displayed_magnitudes=[TimeMagnitude.SECOND, TimeMagnitude.MINUTE, TimeMagnitude.HOUR]
+                    ),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=InputHint(value=(60*60, 2*60*60)),
+                ),
+            ),
+        }
+    )
+
+
+rule_spec_exim_mailq = CheckParameters(
+    name="exim_mailq",
+    title=Title("Exim Queue"),
+    topic=Topic.GENERAL,
+    parameter_form=_parameter_form_exim_mailq,
+    condition=HostCondition(),
 )
-
-
-def _parameter_valuespec_exim_mailq():
-    return Dictionary(elements=[
-        ("length",
-         Tuple(
-             title = _("Mails in outgoing mail queue"),
-             help = _("Set the levels for the maximum number of E-Mails currently in the mail queue."),
-             elements = [
-                 Integer(title = _("Warning at"), unit = "mails", minvalue = 0, default_value = 10),
-                 Integer(title = _("Critical at"), unit = "mails", minvalue = 0, default_value = 20),
-             ],
-         )),
-        ("size",
-         Tuple(
-             title=_("Mailsize in outgoing mail queue"),
-             help = _("Set the levels for the maximum size of all E-Mails in the mail queue."),
-             elements=[
-                 Filesize(title=_("Warning at"), minvalue=0, default_value=(1024**2)),
-                 Filesize(title=_("Critical at"), minvalue=0, default_value=2*(1024**2)),
-             ],
-         )),
-         ("age_oldest",
-         Tuple(
-             title=_("Age of oldest mail"),
-             help = _("Set the levels for the maximum age of the oldest E-Mail in the mail queue."),
-             elements=[
-                 Age(title=_("Warning at"), minvalue=0, default_value=60*60),
-                 Age(title=_("Critical at"), minvalue=0, default_value=2*60*60),
-             ],
-         )),
-
-    ],)
-
-
-rulespec_registry.register(
-    CheckParameterRulespecWithoutItem(
-        check_group_name="exim_mailq",
-        group=RulespecGroupCheckParametersApplications,
-        match_type="dict",
-        parameter_valuespec=_parameter_valuespec_exim_mailq,
-        title=lambda: _("Exim Queue"),
-    ))
