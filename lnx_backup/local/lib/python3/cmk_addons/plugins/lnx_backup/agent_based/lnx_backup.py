@@ -133,8 +133,8 @@ def _check_lnx_backup_levels(backup_job: BackupJob, params: Mapping[str, Any], m
         backup_job['metrics'][metric],
         metric_name=f"lnx_backup_{metric}",
         label=label,
-        levels_lower=params.get(metric) if (levels_lower and params.get(metric) != (0, 0)) else None,
-        levels_upper=params.get(metric) if (levels_upper and params.get(metric) != (0, 0)) else None,
+        levels_lower=params.get(metric) if (levels_lower and params.get(metric) != ("fixed", (0, 0))) else None,
+        levels_upper=params.get(metric) if (levels_upper and params.get(metric) != ("fixed", (0, 0))) else None,
         render_func=render_func,
         notice_only=notice_only,
         boundaries=(0, None),
@@ -194,7 +194,6 @@ def _process_lnx_backup_data(backup_job: BackupJob, params: Mapping[str, Any]) -
 
 def check_lnx_backup(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
 
-    # print(params)
     backup_job = section.get(item)
     if backup_job is None:
         return
