@@ -5,8 +5,8 @@
 #
 # (c) 2017-2026 Marcel Pennewiss <opensource@pennewiss.de>
 #
-# Version: 1.3
-# Last-Modified: 2026-05-11
+# Version: 1.3.1
+# Last-Modified: 2026-05-12
 #
 # USAGE:
 #   Start lnx_backup without any parameter to show usage/help.
@@ -29,7 +29,7 @@
 
 usage() {
 
-    echo "Usage: lnx_backup IDENT TYPE PROGRAM [ARGS...]"
+    echo "Usage: lnx_backup IDENT TYPE CMD [ARGS...]"
     echo ""
     echo "Execute PROGRAM as subprocess while getting statistic information"
     echo "about the running backup process from subprocess output and write"
@@ -38,11 +38,12 @@ usage() {
     echo "to the monitoring server."
     echo "The script outputs STDOUT and STDERR like running without scripts!"
     echo ""
-    echo "IDENT   - Name of the backup"
-    echo "TYPE    - type of PROGRAM output (duply, tar, rsync, refresh, empty)"
+    echo "IDENT   - Name of the backup (e.g. My_rsync_backup)"
+    echo "TYPE    - Used tool or function (allowed: duply, rsync, tar, refresh, empty)"
     echo "          \"refresh\" will just refresh the start/end of backup information"
     echo "          \"empty\" will just create backup information with zero values"
-    echo "PROGRAM - Programm to run with arguments to follow"
+    echo "CMD     - Program to run (e.g. rsync)"
+    echo "ARGS    - All arguments (e.g. --stats --archive /source /backup)"
     echo ""
     echo "rsync requires \"--stats\" as argument to output statistic information"
     echo "which will be fetched by this script. Any PROGRAM should not be run with"
