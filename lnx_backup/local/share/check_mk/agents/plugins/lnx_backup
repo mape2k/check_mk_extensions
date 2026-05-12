@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# (c) 2022 Marcel Pennewiss <opensource@pennewiss.de>
+# (c) 2026 Marcel Pennewiss <opensource@pennewiss.de>
 
 # This is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
@@ -14,8 +14,7 @@
 # Boston, MA 02110-1301 USA.
 
 # Get information about monitored backups
-if cd /var/lib/check_mk_agent/lnx_backup;
-then
+if cd /var/lib/check_mk_agent/lnx_backup >/dev/null 2>&1; then
   echo '<<<lnx_backup>>>'
   head -n -0 -v *
 fi

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 
-# (c) 2022 Marcel Pennewiss <opensource@pennewiss.de>
+# (c) 2026 Marcel Pennewiss <opensource@pennewiss.de>
 
 # This is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
@@ -14,149 +14,274 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from cmk.gui.i18n import _
-from cmk.gui.valuespec import (
-    Age,
+from cmk.rulesets.v1 import (
+    Help,
+    Title,
+)
+from cmk.rulesets.v1.form_specs import (
+    DataSize,
+    DictElement,
     Dictionary,
-    DropdownChoice,
-    TextAscii,
-    Tuple,
-    ListOf,
+    IECMagnitude,
+    InputHint,
     Integer,
-    MonitoringState,
+    LevelDirection,
+    MatchingScope,
+    migrate_to_lower_integer_levels,
+    migrate_to_upper_integer_levels,
+    migrate_to_upper_float_levels,
+    RegularExpression,
+    SimpleLevels,
+    TimeMagnitude,
+    TimeSpan,
+)
+from cmk.rulesets.v1.rule_specs import (
+    CheckParameters,
+    HostAndItemCondition,
+    Topic,
 )
 
-from cmk.gui.plugins.wato import (
-    CheckParameterRulespecWithItem,
-    rulespec_registry,
-    RulespecGroupCheckParametersApplications,
-)
 
-def _item_valuespec_lnx_backup():
-    return TextAscii(
-            title=_("Backup"),
-            help = _("The name of the backup.")
+def _migrate_exit_code(value):
+
+    if isinstance(value, tuple):
+        return {
+            "ok": "0",
+            "warn": str(value[0]),
+            "crit": str(value[1])
+        }
+    return value
+
+
+def _migrateHostAndItemCondition(value):
+    print(value)
+    return value
+
+
+def _parameter_form_lnx_backup():
+
+    return Dictionary(
+        title=Title("Limits"),
+        help_text=Help("Limits for linux backup"),
+        elements={
+            "age": DictElement(
+                required=False,
+                parameter_form=SimpleLevels(
+                    title=Title("Age"),
+                    migrate=migrate_to_upper_float_levels,
+                    help_text=Help("Set the levels for the maximum age of a backup."),
+                    form_spec_template=TimeSpan(
+                        displayed_magnitudes=[
+                            TimeMagnitude.SECOND,
+                            TimeMagnitude.MINUTE,
+                            TimeMagnitude.HOUR,
+                            TimeMagnitude.DAY,
+                        ]
+                    ),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=InputHint(value=(26*60*60, 50*60*60)),
+                ),
+            ),
+            "duration": DictElement(
+                required=False,
+                parameter_form=SimpleLevels(
+                    title=Title("Duration"),
+                    migrate=migrate_to_upper_float_levels,
+                    help_text=Help("Set the levels for the maximum duration of a backup."),
+                    form_spec_template=TimeSpan(
+                        displayed_magnitudes=[
+                            TimeMagnitude.SECOND,
+                            TimeMagnitude.MINUTE,
+                            TimeMagnitude.HOUR,
+                        ]
+                    ),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=InputHint(value=(0, 0)),
+                ),
+            ),
+            "source_files": DictElement(
+                required=False,
+                parameter_form=SimpleLevels(
+                    title=Title("Files"),
+                    migrate=migrate_to_lower_integer_levels,
+                    help_text=Help("Set the levels for the minimum of source files."),
+                    form_spec_template=Integer(
+                        unit_symbol="files",
+                    ),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_fixed_levels=InputHint(value=(0, 0)),
+                ),
+            ),
+            "source_filesize": DictElement(
+                required=False,
+                parameter_form=SimpleLevels(
+                    title=Title("Files - Size"),
+                    migrate=migrate_to_lower_integer_levels,
+                    help_text=Help("Set the levels for the minimum source file size."),
+                    form_spec_template=DataSize(
+                        displayed_magnitudes=[
+                            IECMagnitude.BYTE,
+                            IECMagnitude.KIBI,
+                            IECMagnitude.MEBI,
+                            IECMagnitude.GIBI,
+                            IECMagnitude.TEBI,
+                        ]
+                    ),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_fixed_levels=InputHint(value=(0, 0)),
+                ),
+            ),
+            "new_files": DictElement(
+                required=False,
+                parameter_form=SimpleLevels(
+                    title=Title("New files"),
+                    migrate=migrate_to_lower_integer_levels,
+                    help_text=Help("Set the levels for the minimum of new files."),
+                    form_spec_template=Integer(
+                        unit_symbol="files",
+                    ),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_fixed_levels=InputHint(value=(0, 0)),
+                ),
+            ),
+            "new_filesize": DictElement(
+                required=False,
+                parameter_form=SimpleLevels(
+                    title=Title("New files - Size"),
+                    migrate=migrate_to_lower_integer_levels,
+                    help_text=Help("Set the levels for the minimum new file size."),
+                    form_spec_template=DataSize(
+                        displayed_magnitudes=[
+                            IECMagnitude.BYTE,
+                            IECMagnitude.KIBI,
+                            IECMagnitude.MEBI,
+                            IECMagnitude.GIBI,
+                            IECMagnitude.TEBI,
+                        ]
+                    ),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_fixed_levels=InputHint(value=(0, 0)),
+                ),
+            ),
+            "changed_files": DictElement(
+                required=False,
+                parameter_form=SimpleLevels(
+                    title=Title("Changed files"),
+                    migrate=migrate_to_lower_integer_levels,
+                    help_text=Help("Set the levels for the minimum of changed files."),
+                    form_spec_template=Integer(
+                        unit_symbol="files",
+                    ),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_fixed_levels=InputHint(value=(0, 0)),
+                ),
+            ),
+            "changed_filesize": DictElement(
+                required=False,
+                parameter_form=SimpleLevels(
+                    title=Title("Changed files - Size"),
+                    migrate=migrate_to_lower_integer_levels,
+                    help_text=Help("Set the levels for the minimum changed filesize."),
+                    form_spec_template=DataSize(
+                        displayed_magnitudes=[
+                            IECMagnitude.BYTE,
+                            IECMagnitude.KIBI,
+                            IECMagnitude.MEBI,
+                            IECMagnitude.GIBI,
+                            IECMagnitude.TEBI,
+                        ]
+                    ),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_fixed_levels=InputHint(value=(0, 0)),
+                ),
+            ),
+            "deleted_files": DictElement(
+                required=False,
+                parameter_form=SimpleLevels(
+                    title=Title("Deleted files"),
+                    migrate=migrate_to_lower_integer_levels,
+                    help_text=Help("Set the levels for the minimum of deleted files."),
+                    form_spec_template=Integer(
+                        unit_symbol="files",
+                    ),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_fixed_levels=InputHint(value=(0, 0)),
+                ),
+            ),
+            "backup_size": DictElement(
+                required=False,
+                parameter_form=SimpleLevels(
+                    title=Title("Backup size"),
+                    migrate=migrate_to_lower_integer_levels,
+                    help_text=Help("Set the levels for the minimum backup size."),
+                    form_spec_template=DataSize(
+                        displayed_magnitudes=[
+                            IECMagnitude.BYTE,
+                            IECMagnitude.KIBI,
+                            IECMagnitude.MEBI,
+                            IECMagnitude.GIBI,
+                            IECMagnitude.TEBI,
+                        ]
+                    ),
+                    level_direction=LevelDirection.LOWER,
+                    prefill_fixed_levels=InputHint(value=(1024, 2048)),
+                ),
+            ),
+            "errors": DictElement(
+                required=False,
+                parameter_form=SimpleLevels(
+                    title=Title("Errors"),
+                    migrate=migrate_to_upper_integer_levels,
+                    help_text=Help("Set the levels for the maximum of errors."),
+                    form_spec_template=Integer(
+                        unit_symbol="errors",
+                    ),
+                    level_direction=LevelDirection.UPPER,
+                    prefill_fixed_levels=InputHint(value=(1, 1)),
+                ),
+            ),
+            "exit_code": DictElement(
+                required=False,
+                parameter_form=Dictionary(
+                    title=Title("Exit code"),
+                    migrate=_migrate_exit_code,
+                    help_text=Help("Define the exit codes for Ok, Warning and Critical. Any other code results in Unknown."),
+                    elements={
+                        "ok": DictElement(
+                            required=False,
+                            parameter_form=RegularExpression(
+                                title=Title("Ok at"),
+                                predefined_help_text=MatchingScope.FULL,
+                                prefill=InputHint(value="0")
+                            ),
+                        ),
+                        "warn": DictElement(
+                            required=False,
+                            parameter_form=RegularExpression(
+                                title=Title("Warning at"),
+                                predefined_help_text=MatchingScope.FULL,
+                                prefill=InputHint(value="(1|2|3)")
+                            ),
+                        ),
+                        "crit": DictElement(
+                            required=False,
+                            parameter_form=RegularExpression(
+                                title=Title("Critical at"),
+                                predefined_help_text=MatchingScope.FULL,
+                                prefill=InputHint(value="(254|255)")
+                            ),
+                        ),
+                    },
+                ),
+            ),
+        }
     )
 
-def _parameter_valuespec_lnx_backup():
-    return Dictionary(elements=[
-        ("age",
-         Tuple(
-             title=_("Age"),
-             help = _("Set the levels for the maximum age of a backup."),
-             elements=[
-                 Age(title=_("Warning at"), default_value=25*60*60),
-                 Age(title=_("Critical at"), default_value=49*60*60),
-             ],
-         )),
-        ("duration",
-         Tuple(
-             title=_("Duration"),
-             help = _("Set the levels for the maximum duration of a backup."),
-             elements=[
-                 Age(title=_("Warning at"), default_value=0),
-                 Age(title=_("Critical at"), default_value=0),
-             ],
-         )),
-        ("source_files",
-         Tuple(
-             title = _("Source files"),
-             help = _("Set the levels for the minimum of source files."),
-             elements = [
-                 Integer(title = _("Warning at"), minvalue = 0, default_value = 0),
-                 Integer(title = _("Critical at"), minvalue = 0, default_value = 0),
-             ],
-         )),
-        ("source_filesize",
-         Tuple(
-             title = _("Source files - Size"),
-             help = _("Set the levels for the minimum source file size."),
-             elements = [
-                 Filesize(title = _("Warning at"), minvalue = 0, default_value = 0),
-                 Filesize(title = _("Critical at"), minvalue = 0, default_value = 0),
-             ],
-         )),
-        ("new_files",
-         Tuple(
-             title = _("New files"),
-             help = _("Set the levels for the minimum of new files."),
-             elements = [
-                 Integer(title = _("Warning at"), minvalue = 0, default_value = 0),
-                 Integer(title = _("Critical at"), minvalue = 0, default_value = 0),
-             ],
-         )),
-        ("new_filesize",
-         Tuple(
-             title = _("New files - Size"),
-             help = _("Set the levels for the minimum new file size."),
-             elements = [
-                 Filesize(title = _("Warning at"), minvalue = 0, default_value = 0),
-                 Filesize(title = _("Critical at"), minvalue = 0, default_value = 0),
-             ],
-         )),
-        ("deleted_files",
-         Tuple(
-             title = _("Deleted files"),
-             help = _("Set the levels for the minimum of deleted files."),
-             elements = [
-                 Integer(title = _("Warning at"), minvalue = 0, default_value = 0),
-                 Integer(title = _("Critical at"), minvalue = 0, default_value = 0),
-             ],
-         )),
-        ("changed_files",
-         Tuple(
-             title = _("Changed files"),
-             help = _("Set the levels for the minimum of changed files."),
-             elements = [
-                 Integer(title = _("Warning at"), minvalue = 0, default_value = 0),
-                 Integer(title = _("Critical at"), minvalue = 0, default_value = 0),
-             ]
-         )),
-        ("changed_filesize",
-         Tuple(
-             title = _("Changed files - Size"),
-             help = _("Set the levels for the minimum changed filesize."),
-             elements = [
-                 Filesize(title = _("Warning at"), minvalue = 0, default_value = 0),
-                 Filesize(title = _("Critical at"), minvalue = 0, default_value = 0),
-             ],
-         )),
-        ("backup_size",
-         Tuple(
-             title = _("Backup size"),
-             help = _("Set the levels for the minimum backup size."),
-             elements = [
-                 Filesize(title = _("Warning at"), minvalue = 0, default_value = 1024),
-                 Filesize(title = _("Critical at"), minvalue = 0, default_value = 1024),
-             ],
-         )),
-       ("errors",
-        Tuple(
-            title = _("Errors"),
-            help = _("Set the levels for the maximum of errors."),
-            elements = [
-                Integer(title = _("Warning at"), minvalue = 0, default_value = 1),
-                Integer(title = _("Critical at"), minvalue = 0, default_value = 1),
-            ],
-        )),
-       ("exit_code",
-        Tuple(
-            title = _("Exit code"),
-            help = _("Set the levels for the minimal exit code."),
-            elements = [
-                Integer(title = _("Warning at"), minvalue = 0, default_value = 1),
-                Integer(title = _("Critical at"), minvalue = 0, default_value = 1),
-            ]
-        )),
-    ],)
 
-
-rulespec_registry.register(
-    CheckParameterRulespecWithItem(
-        check_group_name="lnx_backup",
-        group=RulespecGroupCheckParametersApplications,
-        match_type="dict",
-        item_spec=_item_valuespec_lnx_backup,
-        parameter_valuespec=_parameter_valuespec_lnx_backup,
-        title=lambda: _("Linux Backup"),
-    ))
+rule_spec_lnx_backup = CheckParameters(
+    name="lnx_backup",
+    title=Title("Linux Backup"),
+    topic=Topic.LINUX,
+    parameter_form=_parameter_form_lnx_backup,
+    condition=HostAndItemCondition(item_title=Title("Backup")),
+)

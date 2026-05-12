@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- encoding: utf-8; py-indent-offset: 4 -*-
 
-# (c) 2022 Marcel Pennewiss <opensource@pennewiss.de>
+# (c) 2026 Marcel Pennewiss <opensource@pennewiss.de>
 
 # This is free software;  you can redistribute it and/or modify it
 # under the  terms of the  GNU General Public License  as published by
@@ -14,71 +14,106 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
-from cmk.gui.i18n import _
-from cmk.gui.plugins.metrics import metric_info
+from cmk.graphing.v1 import Title
+from cmk.graphing.v1.metrics import (
+    AutoPrecision,
+    Color,
+    DecimalNotation,
+    Metric,
+    SINotation,
+    StrictPrecision,
+    TimeNotation,
+    Unit,
+)
+from cmk.graphing.v1.perfometers import (
+    Closed,
+    FocusRange,
+    Open,
+    Perfometer,
+)
 
-metric_info["lnx_backup_age"] = {
-    "title": _("Age"),
-    "unit": "s",
-    "color": "16/a",
-}
+UNIT_BYTES = Unit(SINotation('bytes'), AutoPrecision(2))
+UNIT_COUNTER = Unit(DecimalNotation(''), StrictPrecision(0))
 
-metric_info["lnx_backup_duration"] = {
-    "title": _("Duration"),
-    "unit": "s",
-    "color": "16/b",
-}
+metric_lnx_backup_age = Metric(
+    name="lnx_backup_age",
+    title=Title("Age"),
+    unit=Unit(TimeNotation()),
+    color=Color.ORANGE,
+)
 
-metric_info["lnx_backup_errors"] = {
-    "title": _("Errors"),
-    "unit": "count",
-    "color": "13/a",
-}
+metric_lnx_backup_duration = Metric(
+    name="lnx_backup_duration",
+    title=Title("Duration"),
+    unit=Unit(TimeNotation()),
+    color=Color.LIGHT_ORANGE,
+)
 
-metric_info["lnx_backup_backup_size"] = {
-    "title": _("Backup Size"),
-    "unit": "bytes",
-    "color": "22/a",
-}
+metric_lnx_backup_errors = Metric(
+    name="lnx_backup_errors",
+    title=Title("Errors"),
+    unit=UNIT_COUNTER,
+    color=Color.DARK_RED,
+)
 
-metric_info["lnx_backup_new_files"] = {
-    "title": _("New files"),
-    "unit": "count",
-    "color": "44/a",
-}
+metric_lnx_backup_backup_size = Metric(
+    name="lnx_backup_backup_size",
+    title=Title("Backup Size"),
+    unit=UNIT_BYTES,
+    color=Color.YELLOW,
+)
 
-metric_info["lnx_backup_new_filesize"] = {
-    "title": _("New files - Size"),
-    "unit": "bytes",
-    "color": "44/b",
-}
+metric_lnx_backup_new_files = Metric(
+    name="lnx_backup_new_files",
+    title=Title("New files"),
+    unit=UNIT_COUNTER,
+    color=Color.BLUE,
+)
 
-metric_info["lnx_backup_changed_files"] = {
-    "title": _("Changed files"),
-    "unit": "count",
-    "color": "41/a",
-}
+metric_lnx_backup_new_filesize = Metric(
+    name="lnx_backup_new_filesize",
+    title=Title("New files - Size"),
+    unit=UNIT_BYTES,
+    color=Color.LIGHT_BLUE,
+)
 
-metric_info["lnx_backup_changed_filesize"] = {
-    "title": _("Changed files - Size"),
-    "unit": "bytes",
-    "color": "41/b",
-}
+metric_lnx_backup_changed_files = Metric(
+    name="lnx_backup_changed_files",
+    title=Title("Changed files"),
+    unit=UNIT_COUNTER,
+    color=Color.GREEN,
+)
 
-metric_info["lnx_backup_deleted_files"] = {
-    "title": _("Deleted files"),
-    "unit": "bytes",
-    "color": "13/a",
-}
+metric_lnx_backup_changed_filesize = Metric(
+    name="lnx_backup_changed_filesize",
+    title=Title("Changed files - Size"),
+    unit=UNIT_BYTES,
+    color=Color.LIGHT_GREEN,
+)
 
-metric_info["lnx_backup_source_files"] = {
-    "title": _("Source files"),
-    "unit": "count",
-    "color": "34/a",
-}
+metric_lnx_backup_deleted_files = Metric(
+    name="lnx_backup_deleted_files",
+    title=Title("Deleted files"),
+    unit=UNIT_COUNTER,
+    color=Color.LIGHT_RED,
+)
 
-metric_info["lnx_backup_source_filesize"] = {
-    "title": _("Source files - Size"),
-    "unit": "bytes",
-    "color": "34/b",
-}
+metric_lnx_backup_source_files = Metric(
+    name="lnx_backup_source_files",
+    title=Title("Files"),
+    unit=UNIT_COUNTER,
+    color=Color.CYAN,
+)
+
+metric_lnx_backup_source_filesize = Metric(
+    name="lnx_backup_source_filesize",
+    title=Title("Files - Size"),
+    unit=UNIT_BYTES,
+    color=Color.LIGHT_CYAN,
+)
+
+perfometer_lnx_backup = Perfometer(
+    name="lnx_backup",
+    focus_range=FocusRange(Closed(0), Open(240)),
+    segments=["lnx_backup_duration"],
+)

@@ -3,10 +3,10 @@
 # Get output of backup program and output statistics
 # for check_mk lnx_backup plugin
 #
-# (c) 2017-2022 Marcel Pennewiss <opensource@pennewiss.de>
+# (c) 2017-2026 Marcel Pennewiss <opensource@pennewiss.de>
 #
 # Version: 1.3
-# Last-Modified: 2022-07-11
+# Last-Modified: 2026-05-11
 #
 # USAGE:
 #   Start lnx_backup without any parameter to show usage/help.
@@ -131,6 +131,7 @@ run_process() {
     save_information
 }
 
+# shellcheck disable=SC2329
 post_process_duply() {
 
     if [ ${OUTPUT_EXIT_CODE} -ne 0 ]; then
@@ -151,6 +152,7 @@ post_process_duply() {
 
 }
 
+# shellcheck disable=SC2329
 post_process_rsync() {
 
     if [ ${OUTPUT_EXIT_CODE} -ne 0 ]; then
@@ -167,6 +169,7 @@ post_process_rsync() {
 
 }
 
+# shellcheck disable=SC2329
 post_process_tar() {
 
     if [ ${OUTPUT_EXIT_CODE} -ge 2 ]; then
@@ -180,6 +183,7 @@ post_process_tar() {
 
 }
 
+# shellcheck disable=SC2329
 post_process_refresh() {
 
     if [ ! -f "${OUTPUT_FILE}" ];then
@@ -204,6 +208,7 @@ post_process_refresh() {
 
 }
 
+# shellcheck disable=SC2329
 post_process_empty() {
 
     OUTPUT_EXIT_CODE=0
