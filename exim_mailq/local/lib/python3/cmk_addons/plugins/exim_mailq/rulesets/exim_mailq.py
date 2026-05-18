@@ -46,7 +46,7 @@ def _parameter_form_exim_mailq():
         help_text=Help("Limits for exim mail queue"),
         elements={
             "length": DictElement(
-                required = False,
+                required=False,
                 parameter_form=SimpleLevels(
                     title=Title("Mails in outgoing mail queue"),
                     migrate=migrate_to_upper_integer_levels,
@@ -59,7 +59,7 @@ def _parameter_form_exim_mailq():
                 ),
             ),
             "size": DictElement(
-                required = False,
+                required=False,
                 parameter_form=SimpleLevels(
                     title=Title("Mailsize in outgoing mail queue"),
                     migrate=migrate_to_upper_integer_levels,
@@ -76,13 +76,17 @@ def _parameter_form_exim_mailq():
                 ),
             ),
             "age_oldest": DictElement(
-                required = False,
+                required=False,
                 parameter_form=SimpleLevels(
                     title=Title("Age of oldest mail"),
                     migrate=migrate_to_upper_float_levels,
                     help_text=Help("Set the levels for the maximum age of the oldest E-Mail in the mail queue."),
                     form_spec_template=TimeSpan(
-                        displayed_magnitudes=[TimeMagnitude.SECOND, TimeMagnitude.MINUTE, TimeMagnitude.HOUR]
+                        displayed_magnitudes=[
+                            TimeMagnitude.SECOND,
+                            TimeMagnitude.MINUTE,
+                            TimeMagnitude.HOUR
+                        ]
                     ),
                     level_direction=LevelDirection.UPPER,
                     prefill_fixed_levels=InputHint(value=(60*60, 2*60*60)),
