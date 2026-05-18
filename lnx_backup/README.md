@@ -82,8 +82,9 @@ Add lnx_backup with parameters as wrapper before rsync command:
 
 ### 2.4
   * Migrate to new plugin API v2 for checkmk 2.3 and newer
-  * Rules for exit code based on regex match
   * Ignore error messages on directory check in plugin
+  * Rules for exit code based on regex match (fixes exit code checks)
+  * Allow lower/upper levels for most of the rule parameters
   * Add bakery
 ### 2.0
   * Migrate to plugin API v1 for checkmk 2.0 and newer

@@ -22,12 +22,13 @@ from cmk.rulesets.v1.form_specs import (
     DataSize,
     DictElement,
     Dictionary,
+    DefaultValue,
     IECMagnitude,
     InputHint,
     Integer,
     LevelDirection,
+    LevelsType,
     MatchingScope,
-    migrate_to_lower_integer_levels,
     migrate_to_upper_integer_levels,
     migrate_to_upper_float_levels,
     RegularExpression,
@@ -53,8 +54,23 @@ def _migrate_exit_code(value):
     return value
 
 
-def _migrateHostAndItemCondition(value):
-    print(value)
+def _migrate_lower_integer_levels_to_dict(value):
+
+    if isinstance(value, tuple):
+        return {
+            "lower": ("fixed", (int(value[0]), int(value[1]))),
+            "upper": ("no_levels", None)
+        }
+    return value
+
+
+def _migrate_upper_float_levels_to_dict(value):
+
+    if isinstance(value, tuple):
+        return {
+            "lower": ("no_levels", None),
+            "upper": ("fixed", (float(value[0]), float(value[1])))
+        }
     return value
 
 
@@ -84,147 +100,364 @@ def _parameter_form_lnx_backup():
             ),
             "duration": DictElement(
                 required=False,
-                parameter_form=SimpleLevels(
+                parameter_form=Dictionary(
                     title=Title("Duration"),
-                    migrate=migrate_to_upper_float_levels,
-                    help_text=Help("Set the levels for the maximum duration of a backup."),
-                    form_spec_template=TimeSpan(
-                        displayed_magnitudes=[
-                            TimeMagnitude.SECOND,
-                            TimeMagnitude.MINUTE,
-                            TimeMagnitude.HOUR,
-                        ]
-                    ),
-                    level_direction=LevelDirection.UPPER,
-                    prefill_fixed_levels=InputHint(value=(0, 0)),
+                    migrate=_migrate_upper_float_levels_to_dict,
+                    help_text=Help("Set the levels for the duration of a backup."),
+                    elements={
+                        "lower": DictElement(
+                            required=True,
+                            parameter_form=SimpleLevels(
+                                title=Title("Lower levels"),
+                                form_spec_template=TimeSpan(
+                                    displayed_magnitudes=[
+                                        TimeMagnitude.SECOND,
+                                        TimeMagnitude.MINUTE,
+                                        TimeMagnitude.HOUR,
+                                    ]
+                                ),
+                                level_direction=LevelDirection.LOWER,
+                                prefill_levels_type=DefaultValue(value=LevelsType.NONE),
+                                prefill_fixed_levels=InputHint(value=(20*60, 10*60)),
+                            ),
+                        ),
+                        "upper": DictElement(
+                            required=True,
+                            parameter_form=SimpleLevels(
+                                title=Title("Upper levels"),
+                                form_spec_template=TimeSpan(
+                                    displayed_magnitudes=[
+                                        TimeMagnitude.SECOND,
+                                        TimeMagnitude.MINUTE,
+                                        TimeMagnitude.HOUR,
+                                    ]
+                                ),
+                                level_direction=LevelDirection.UPPER,
+                                prefill_levels_type=DefaultValue(value=LevelsType.NONE),
+                                prefill_fixed_levels=InputHint(value=(60*60, 2*60*60)),
+                            ),
+                        ),
+                    },
                 ),
             ),
             "source_files": DictElement(
                 required=False,
-                parameter_form=SimpleLevels(
+                parameter_form=Dictionary(
                     title=Title("Files"),
-                    migrate=migrate_to_lower_integer_levels,
-                    help_text=Help("Set the levels for the minimum of source files."),
-                    form_spec_template=Integer(
-                        unit_symbol="files",
-                    ),
-                    level_direction=LevelDirection.LOWER,
-                    prefill_fixed_levels=InputHint(value=(0, 0)),
+                    migrate=_migrate_lower_integer_levels_to_dict,
+                    help_text=Help("Set the levels of source files."),
+                    elements={
+                        "lower": DictElement(
+                            required=True,
+                            parameter_form=SimpleLevels(
+                                title=Title("Lower levels"),
+                                form_spec_template=Integer(
+                                    unit_symbol="files",
+                                ),
+                                level_direction=LevelDirection.LOWER,
+                                prefill_levels_type=DefaultValue(value=LevelsType.NONE),
+                                prefill_fixed_levels=InputHint(value=(0, 0)),
+                            ),
+                        ),
+                        "upper": DictElement(
+                            required=True,
+                            parameter_form=SimpleLevels(
+                                title=Title("Upper levels"),
+                                form_spec_template=Integer(
+                                    unit_symbol="files",
+                                ),
+                                level_direction=LevelDirection.UPPER,
+                                prefill_levels_type=DefaultValue(value=LevelsType.NONE),
+                                prefill_fixed_levels=InputHint(value=(0, 0)),
+                            ),
+                        ),
+                    },
                 ),
             ),
             "source_filesize": DictElement(
                 required=False,
-                parameter_form=SimpleLevels(
+                parameter_form=Dictionary(
                     title=Title("Files - Size"),
-                    migrate=migrate_to_lower_integer_levels,
-                    help_text=Help("Set the levels for the minimum source file size."),
-                    form_spec_template=DataSize(
-                        displayed_magnitudes=[
-                            IECMagnitude.BYTE,
-                            IECMagnitude.KIBI,
-                            IECMagnitude.MEBI,
-                            IECMagnitude.GIBI,
-                            IECMagnitude.TEBI,
-                        ]
-                    ),
-                    level_direction=LevelDirection.LOWER,
-                    prefill_fixed_levels=InputHint(value=(0, 0)),
+                    migrate=_migrate_lower_integer_levels_to_dict,
+                    help_text=Help("Set the levels for the size of source files."),
+                    elements={
+                        "lower": DictElement(
+                            required=True,
+                            parameter_form=SimpleLevels(
+                                title=Title("Lower levels"),
+                                form_spec_template=DataSize(
+                                    displayed_magnitudes=[
+                                        IECMagnitude.BYTE,
+                                        IECMagnitude.KIBI,
+                                        IECMagnitude.MEBI,
+                                        IECMagnitude.GIBI,
+                                        IECMagnitude.TEBI,
+                                    ]
+                                ),
+                                level_direction=LevelDirection.LOWER,
+                                prefill_levels_type=DefaultValue(value=LevelsType.NONE),
+                                prefill_fixed_levels=InputHint(value=(0, 0)),
+                            ),
+                        ),
+                        "upper": DictElement(
+                            required=True,
+                            parameter_form=SimpleLevels(
+                                title=Title("Upper levels"),
+                                form_spec_template=DataSize(
+                                    displayed_magnitudes=[
+                                        IECMagnitude.BYTE,
+                                        IECMagnitude.KIBI,
+                                        IECMagnitude.MEBI,
+                                        IECMagnitude.GIBI,
+                                        IECMagnitude.TEBI,
+                                    ]
+                                ),
+                                level_direction=LevelDirection.UPPER,
+                                prefill_levels_type=DefaultValue(value=LevelsType.NONE),
+                                prefill_fixed_levels=InputHint(value=(0, 0)),
+                            ),
+                        ),
+                    },
                 ),
             ),
             "new_files": DictElement(
                 required=False,
-                parameter_form=SimpleLevels(
+                parameter_form=Dictionary(
                     title=Title("New files"),
-                    migrate=migrate_to_lower_integer_levels,
-                    help_text=Help("Set the levels for the minimum of new files."),
-                    form_spec_template=Integer(
-                        unit_symbol="files",
-                    ),
-                    level_direction=LevelDirection.LOWER,
-                    prefill_fixed_levels=InputHint(value=(0, 0)),
+                    migrate=_migrate_lower_integer_levels_to_dict,
+                    help_text=Help("Set the levels of new files."),
+                    elements={
+                        "lower": DictElement(
+                            required=True,
+                            parameter_form=SimpleLevels(
+                                title=Title("Lower levels"),
+                                form_spec_template=Integer(
+                                    unit_symbol="files",
+                                ),
+                                level_direction=LevelDirection.LOWER,
+                                prefill_levels_type=DefaultValue(value=LevelsType.NONE),
+                                prefill_fixed_levels=InputHint(value=(0, 0)),
+                            ),
+                        ),
+                        "upper": DictElement(
+                            required=True,
+                            parameter_form=SimpleLevels(
+                                title=Title("Upper levels"),
+                                form_spec_template=Integer(
+                                    unit_symbol="files",
+                                ),
+                                level_direction=LevelDirection.UPPER,
+                                prefill_levels_type=DefaultValue(value=LevelsType.NONE),
+                                prefill_fixed_levels=InputHint(value=(0, 0)),
+                            ),
+                        ),
+                    },
                 ),
             ),
             "new_filesize": DictElement(
                 required=False,
-                parameter_form=SimpleLevels(
+                parameter_form=Dictionary(
                     title=Title("New files - Size"),
-                    migrate=migrate_to_lower_integer_levels,
-                    help_text=Help("Set the levels for the minimum new file size."),
-                    form_spec_template=DataSize(
-                        displayed_magnitudes=[
-                            IECMagnitude.BYTE,
-                            IECMagnitude.KIBI,
-                            IECMagnitude.MEBI,
-                            IECMagnitude.GIBI,
-                            IECMagnitude.TEBI,
-                        ]
-                    ),
-                    level_direction=LevelDirection.LOWER,
-                    prefill_fixed_levels=InputHint(value=(0, 0)),
+                    migrate=_migrate_lower_integer_levels_to_dict,
+                    help_text=Help("Set the levels for the size of new files."),
+                    elements={
+                        "lower": DictElement(
+                            required=True,
+                            parameter_form=SimpleLevels(
+                                title=Title("Lower levels"),
+                                form_spec_template=DataSize(
+                                    displayed_magnitudes=[
+                                        IECMagnitude.BYTE,
+                                        IECMagnitude.KIBI,
+                                        IECMagnitude.MEBI,
+                                        IECMagnitude.GIBI,
+                                        IECMagnitude.TEBI,
+                                    ]
+                                ),
+                                level_direction=LevelDirection.LOWER,
+                                prefill_levels_type=DefaultValue(value=LevelsType.NONE),
+                                prefill_fixed_levels=InputHint(value=(0, 0)),
+                            ),
+                        ),
+                        "upper": DictElement(
+                            required=True,
+                            parameter_form=SimpleLevels(
+                                title=Title("Upper levels"),
+                                form_spec_template=DataSize(
+                                    displayed_magnitudes=[
+                                        IECMagnitude.BYTE,
+                                        IECMagnitude.KIBI,
+                                        IECMagnitude.MEBI,
+                                        IECMagnitude.GIBI,
+                                        IECMagnitude.TEBI,
+                                    ]
+                                ),
+                                level_direction=LevelDirection.UPPER,
+                                prefill_levels_type=DefaultValue(value=LevelsType.NONE),
+                                prefill_fixed_levels=InputHint(value=(0, 0)),
+                            ),
+                        ),
+                    },
                 ),
             ),
             "changed_files": DictElement(
                 required=False,
-                parameter_form=SimpleLevels(
+                parameter_form=Dictionary(
                     title=Title("Changed files"),
-                    migrate=migrate_to_lower_integer_levels,
-                    help_text=Help("Set the levels for the minimum of changed files."),
-                    form_spec_template=Integer(
-                        unit_symbol="files",
-                    ),
-                    level_direction=LevelDirection.LOWER,
-                    prefill_fixed_levels=InputHint(value=(0, 0)),
+                    migrate=_migrate_lower_integer_levels_to_dict,
+                    help_text=Help("Set the levels of changed files."),
+                    elements={
+                        "lower": DictElement(
+                            required=True,
+                            parameter_form=SimpleLevels(
+                                title=Title("Lower levels"),
+                                form_spec_template=Integer(
+                                    unit_symbol="files",
+                                ),
+                                level_direction=LevelDirection.LOWER,
+                                prefill_levels_type=DefaultValue(value=LevelsType.NONE),
+                                prefill_fixed_levels=InputHint(value=(0, 0)),
+                            ),
+                        ),
+                        "upper": DictElement(
+                            required=True,
+                            parameter_form=SimpleLevels(
+                                title=Title("Upper levels"),
+                                form_spec_template=Integer(
+                                    unit_symbol="files",
+                                ),
+                                level_direction=LevelDirection.UPPER,
+                                prefill_levels_type=DefaultValue(value=LevelsType.NONE),
+                                prefill_fixed_levels=InputHint(value=(0, 0)),
+                            ),
+                        ),
+                    },
                 ),
             ),
             "changed_filesize": DictElement(
                 required=False,
-                parameter_form=SimpleLevels(
+                parameter_form=Dictionary(
                     title=Title("Changed files - Size"),
-                    migrate=migrate_to_lower_integer_levels,
-                    help_text=Help("Set the levels for the minimum changed filesize."),
-                    form_spec_template=DataSize(
-                        displayed_magnitudes=[
-                            IECMagnitude.BYTE,
-                            IECMagnitude.KIBI,
-                            IECMagnitude.MEBI,
-                            IECMagnitude.GIBI,
-                            IECMagnitude.TEBI,
-                        ]
-                    ),
-                    level_direction=LevelDirection.LOWER,
-                    prefill_fixed_levels=InputHint(value=(0, 0)),
+                    migrate=_migrate_lower_integer_levels_to_dict,
+                    help_text=Help("Set the levels for the size of the changed files."),
+                    elements={
+                        "lower": DictElement(
+                            required=True,
+                            parameter_form=SimpleLevels(
+                                title=Title("Lower levels"),
+                                form_spec_template=DataSize(
+                                    displayed_magnitudes=[
+                                        IECMagnitude.BYTE,
+                                        IECMagnitude.KIBI,
+                                        IECMagnitude.MEBI,
+                                        IECMagnitude.GIBI,
+                                        IECMagnitude.TEBI,
+                                    ]
+                                ),
+                                level_direction=LevelDirection.LOWER,
+                                prefill_levels_type=DefaultValue(value=LevelsType.NONE),
+                                prefill_fixed_levels=InputHint(value=(0, 0)),
+                            ),
+                        ),
+                        "upper": DictElement(
+                            required=True,
+                            parameter_form=SimpleLevels(
+                                title=Title("Upper levels"),
+                                form_spec_template=DataSize(
+                                    displayed_magnitudes=[
+                                        IECMagnitude.BYTE,
+                                        IECMagnitude.KIBI,
+                                        IECMagnitude.MEBI,
+                                        IECMagnitude.GIBI,
+                                        IECMagnitude.TEBI,
+                                    ]
+                                ),
+                                level_direction=LevelDirection.UPPER,
+                                prefill_levels_type=DefaultValue(value=LevelsType.NONE),
+                                prefill_fixed_levels=InputHint(value=(0, 0)),
+                            ),
+                        ),
+                    },
                 ),
             ),
             "deleted_files": DictElement(
                 required=False,
-                parameter_form=SimpleLevels(
+                parameter_form=Dictionary(
                     title=Title("Deleted files"),
-                    migrate=migrate_to_lower_integer_levels,
-                    help_text=Help("Set the levels for the minimum of deleted files."),
-                    form_spec_template=Integer(
-                        unit_symbol="files",
-                    ),
-                    level_direction=LevelDirection.LOWER,
-                    prefill_fixed_levels=InputHint(value=(0, 0)),
+                    migrate=_migrate_lower_integer_levels_to_dict,
+                    help_text=Help("Set the levels of deleted files."),
+                    elements={
+                        "lower": DictElement(
+                            required=True,
+                            parameter_form=SimpleLevels(
+                                title=Title("Lower levels"),
+                                form_spec_template=Integer(
+                                    unit_symbol="files",
+                                ),
+                                level_direction=LevelDirection.LOWER,
+                                prefill_levels_type=DefaultValue(value=LevelsType.NONE),
+                                prefill_fixed_levels=InputHint(value=(0, 0)),
+                            ),
+                        ),
+                        "upper": DictElement(
+                            required=True,
+                            parameter_form=SimpleLevels(
+                                title=Title("Upper levels"),
+                                form_spec_template=Integer(
+                                    unit_symbol="files",
+                                ),
+                                level_direction=LevelDirection.UPPER,
+                                prefill_levels_type=DefaultValue(value=LevelsType.NONE),
+                                prefill_fixed_levels=InputHint(value=(0, 0)),
+                            ),
+                        ),
+                    },
                 ),
             ),
             "backup_size": DictElement(
                 required=False,
-                parameter_form=SimpleLevels(
-                    title=Title("Backup size"),
-                    migrate=migrate_to_lower_integer_levels,
-                    help_text=Help("Set the levels for the minimum backup size."),
-                    form_spec_template=DataSize(
-                        displayed_magnitudes=[
-                            IECMagnitude.BYTE,
-                            IECMagnitude.KIBI,
-                            IECMagnitude.MEBI,
-                            IECMagnitude.GIBI,
-                            IECMagnitude.TEBI,
-                        ]
-                    ),
-                    level_direction=LevelDirection.LOWER,
-                    prefill_fixed_levels=InputHint(value=(1024, 2048)),
+                parameter_form=Dictionary(
+                    title=Title("Backup - Size"),
+                    migrate=_migrate_lower_integer_levels_to_dict,
+                    help_text=Help("Set the levels for the backup size."),
+                    elements={
+                        "lower": DictElement(
+                            required=True,
+                            parameter_form=SimpleLevels(
+                                title=Title("Lower levels"),
+                                form_spec_template=DataSize(
+                                    displayed_magnitudes=[
+                                        IECMagnitude.BYTE,
+                                        IECMagnitude.KIBI,
+                                        IECMagnitude.MEBI,
+                                        IECMagnitude.GIBI,
+                                        IECMagnitude.TEBI,
+                                    ]
+                                ),
+                                level_direction=LevelDirection.LOWER,
+                                prefill_levels_type=DefaultValue(value=LevelsType.NONE),
+                                prefill_fixed_levels=InputHint(value=(1024, 2*1024)),
+                            ),
+                        ),
+                        "upper": DictElement(
+                            required=True,
+                            parameter_form=SimpleLevels(
+                                title=Title("Upper levels"),
+                                form_spec_template=DataSize(
+                                    displayed_magnitudes=[
+                                        IECMagnitude.BYTE,
+                                        IECMagnitude.KIBI,
+                                        IECMagnitude.MEBI,
+                                        IECMagnitude.GIBI,
+                                        IECMagnitude.TEBI,
+                                    ]
+                                ),
+                                level_direction=LevelDirection.UPPER,
+                                prefill_levels_type=DefaultValue(value=LevelsType.NONE),
+                                prefill_fixed_levels=InputHint(value=(0, 0)),
+                            ),
+                        ),
+                    },
                 ),
             ),
             "errors": DictElement(

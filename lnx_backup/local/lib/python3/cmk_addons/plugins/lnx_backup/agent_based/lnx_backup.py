@@ -48,19 +48,20 @@ from cmk.agent_based.v2 import (
     StringTable,
 )
 
-_METRIC_SPECS: Mapping[str, Tuple[str, Callable, bool, bool, bool]] = {
-    # 'metric': ('Metric Name', renderer, notice_only, Levels are lower levels, Levels are upper levels)
-    'age': ('Job age', render.timespan, False, False, True),
-    'duration': ('Backup duration', render.timespan, False, False, True),
-    'source_files': ('Files', str, True, True, False),
-    'source_filesize': ('Filesize', render.bytes, True, True, False),
-    'new_files': ('New Files', str, True, True, False),
-    'new_filesize': ('New Filesize', render.bytes, True, True, False),
-    'deleted_files': ('Deleted Files', str, True, True, False),
-    'changed_files': ('Changed Files', str, True, True, False),
-    'changed_filesize': ('Changed Filesize', render.bytes, True, True, False),
-    'backup_size': ('Backup size', render.bytes, True, True, False),
-    'errors': ('Errors', str, True, False, True),
+_METRIC_SPECS: Mapping[str, Tuple[str, Callable, bool, bool, bool, bool]] = {
+    # 'metric': ('Metric Name', renderer, notice_only, Levels are lower levels, Levels are upper levels, Levels are regular expression)
+    'age': ('Job age', render.timespan, False, False, True, False),
+    'duration': ('Backup duration', render.timespan, False, True, True, False),
+    'source_files': ('Files', str, True, True, True, False),
+    'source_filesize': ('Filesize', render.bytes, True, True, True, False),
+    'new_files': ('New Files', str, True, True, True, False),
+    'new_filesize': ('New Filesize', render.bytes, True, True, True, False),
+    'changed_files': ('Changed Files', str, True, True, True, False),
+    'changed_filesize': ('Changed Filesize', render.bytes, True, True, True, False),
+    'deleted_files': ('Deleted Files', str, True, True, True, False),
+    'backup_size': ('Backup size', render.bytes, True, True, True, False),
+    'errors': ('Errors', str, True, False, True, False),
+    'exit_code': ('Last exit code', str, False, False, False, True)
 }
 
 Metrics = Dict[str, int]
@@ -69,7 +70,6 @@ Metrics = Dict[str, int]
 class BackupJob(TypedDict, total=False):
     start_time: int
     end_time: int
-    exit_code: int
     metrics: Metrics
 
 
@@ -89,7 +89,6 @@ def parse_lnx_backup(string_table: StringTable) -> Section:
             jobname = f"{' '.join(string_table[idx][1:-1])}"
             metrics: Metrics = {}
             job_stats: BackupJob = {
-                "exit_code": -1,
                 "metrics": metrics
             }
             backup_job = parsed.setdefault(jobname, job_stats)
@@ -103,7 +102,7 @@ def parse_lnx_backup(string_table: StringTable) -> Section:
             val = int(val)
 
             # Append data to job information or metrics
-            if key in ['start_time', 'end_time', 'exit_code']:
+            if key in ['start_time', 'end_time']:
                 backup_job[key] = val
             else:
                 metrics[key] = val  # pyright: ignore[reportPossiblyUnboundVariable]
@@ -120,7 +119,7 @@ def discover_lnx_backup(section: Section) -> DiscoveryResult:
 def _check_lnx_backup_levels(backup_job: BackupJob, params: Mapping[str, Any], metric: str):
 
     # Get metric specs
-    label, render_func, notice_only, levels_lower, levels_upper = _METRIC_SPECS[metric]
+    label, render_func, notice_only, levels_lower, levels_upper, levels_regex = _METRIC_SPECS[metric]
 
     if 'metrics' not in backup_job:
         yield Result(
@@ -129,16 +128,57 @@ def _check_lnx_backup_levels(backup_job: BackupJob, params: Mapping[str, Any], m
         )
         return
 
-    yield from check_levels(
-        backup_job['metrics'][metric],
-        metric_name=f"lnx_backup_{metric}",
-        label=label,
-        levels_lower=params.get(metric) if (levels_lower and params.get(metric) != ("fixed", (0, 0))) else None,
-        levels_upper=params.get(metric) if (levels_upper and params.get(metric) != ("fixed", (0, 0))) else None,
-        render_func=render_func,
-        notice_only=notice_only,
-        boundaries=(0, None),
-    )
+    # Convert dictionaries
+    if isinstance(params.get(metric), dict):
+        params_any: Any = params.get(metric)
+        params_dict: dict = params_any
+
+    if levels_lower and levels_upper:
+        # Metric with both levels
+        yield from check_levels(
+            backup_job['metrics'][metric],
+            metric_name=f"lnx_backup_{metric}",
+            label=label,
+            levels_lower=params_dict['lower'] if params_dict['lower'] != ('no_levels', None) else None,  # pyright: ignore[reportPossiblyUnboundVariable]
+            levels_upper=params_dict['upper'] if params_dict['upper'] != ('no_levels', None) else None,  # pyright: ignore[reportPossiblyUnboundVariable]
+            render_func=render_func,
+            notice_only=notice_only,
+            boundaries=(0, None),
+        )
+    elif levels_regex:
+        # Metrics with regular expressions
+        # Check in reverse state order with "not_found" as fake state for non-matching regex
+        for level in ['crit', 'warn', 'ok', 'not_found']:
+
+            if level not in params_dict:  # pyright: ignore[reportPossiblyUnboundVariable]
+                continue
+
+            if level != 'not_found':
+                regex = re.compile(f"^{params_dict[level]}$")  # pyright: ignore[reportPossiblyUnboundVariable]
+                if regex.match(str(backup_job['metrics'][metric])) is not None:
+                    yield Result(
+                        state=State[level.upper()],
+                        summary=f"{label}: {backup_job['metrics'][metric]}",
+                    )
+                    # Stop if regex matches
+                    break
+            else:
+                yield Result(
+                    state=State.CRIT,
+                    summary=f"Got unhandled '{label}' for configured levels",
+                )
+    else:
+        # Metric with single levels
+        yield from check_levels(
+            backup_job['metrics'][metric],
+            metric_name=f"lnx_backup_{metric}",
+            label=label,
+            levels_lower=params.get(metric) if (levels_lower and params.get(metric) != ('no_levels', None)) else None,
+            levels_upper=params.get(metric) if (levels_upper and params.get(metric) != ('no_levels', None)) else None,
+            render_func=render_func,
+            notice_only=notice_only,
+            boundaries=(0, None),
+        )
 
 
 def _process_lnx_backup_data(backup_job: BackupJob, params: Mapping[str, Any]) -> CheckResult:
@@ -160,49 +200,11 @@ def _process_lnx_backup_data(backup_job: BackupJob, params: Mapping[str, Any]) -
     for metric in sorted(backup_job['metrics']):
         yield from _check_lnx_backup_levels(backup_job, params, metric)
 
-    # Check exit codes with regular expressions
-    if isinstance(params.get('exit_code'), dict):
-        params_exit_code: Any = params.get('exit_code')
-        params_exit_code_dict: dict = params_exit_code
-
-        # Check exit codes with regular expressions
-        # in reverse state order with "not_found" as
-        # fake state for non-matching exit_code
-        for level in ['crit', 'warn', 'ok', 'not_found']:
-
-            if level != 'not_found':
-                regex = re.compile(f"^{params_exit_code_dict[level]}$")
-                if regex.match(str(backup_job.get('exit_code', -1))) is not None:
-                    yield Result(
-                        state=State[level.upper()],
-                        summary=f"Last exit code: {backup_job.get('exit_code')}",
-                    )
-                    # Stop if regex matches
-                    break
-            else:
-                yield Result(
-                    state=State.CRIT,
-                    summary='Got unhandled exit_code for levels',
-                )
-
-    else:
-        yield Result(
-            state=State.UNKNOWN,
-            summary='Got invalid parameters for exit_code levels',
-        )
-
 
 def check_lnx_backup(item: str, params: Mapping[str, Any], section: Section) -> CheckResult:
 
     backup_job = section.get(item)
     if backup_job is None:
-        return
-
-    if backup_job.get("exit_code") == -1:
-        yield Result(
-            state=State.UNKNOWN,
-            summary='Got incomplete information for this backup',
-        )
         return
 
     yield from _process_lnx_backup_data(backup_job, params)
@@ -220,15 +222,16 @@ check_plugin_lnx_backuo = CheckPlugin(
     discovery_function=discover_lnx_backup,
     check_function=check_lnx_backup,
     check_default_parameters={
-        'age':              ("fixed", (93600, 180000)),
-        'source_files':     ("fixed", (0,  0)),
-        'source_filesize':  ("fixed", (0,  0)),
-        'new_files':        ("fixed", (0,  0)),
-        'new_filesize':     ("fixed", (0,  0)),
-        'deleted_files':    ("fixed", (0,  0)),
-        'changed_files':    ("fixed", (0,  0)),
-        'changed_filesize': ("fixed", (0,  0)),
-        'backup_size':      ("fixed", (1024, 2048)),
+        'age':              ("fixed", (26*60*60, 50*60*60)),
+        'duration':         {'lower': ('no_levels', None), 'upper': ('no_levels', None)},
+        'source_files':     {'lower': ('no_levels', None), 'upper': ('no_levels', None)},
+        'source_filesize':  {'lower': ('no_levels', None), 'upper': ('no_levels', None)},
+        'new_files':        {'lower': ('no_levels', None), 'upper': ('no_levels', None)},
+        'new_filesize':     {'lower': ('no_levels', None), 'upper': ('no_levels', None)},
+        'deleted_files':    {'lower': ('no_levels', None), 'upper': ('no_levels', None)},
+        'changed_files':    {'lower': ('no_levels', None), 'upper': ('no_levels', None)},
+        'changed_filesize': {'lower': ('no_levels', None), 'upper': ('no_levels', None)},
+        'backup_size':      {'lower': ("fixed", (1024, 2*1024)), 'upper': ('no_levels', None)},
         'errors':           ("fixed", (1,  1)),
         # Values for ok/warn/crit are regular expression(!)
         'exit_code':        {'ok': '(0)', 'warn': '(1)', 'crit': '(255)'},
