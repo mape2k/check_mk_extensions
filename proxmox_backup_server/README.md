@@ -42,4 +42,4 @@ The plugin uses proxmox-backup-debug to query the API locally.
 ## Changelog
 
 ### 2.4
-  * Initial implementation supporting datastores
+  * Initial implementation supporting datastores and task summary

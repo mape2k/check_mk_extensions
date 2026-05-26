@@ -18,14 +18,15 @@ import json
 import shutil
 import subprocess
 import sys
-import time
+
+from datetime import datetime, timedelta
 from typing import Any
 
 # Proxmox backup debug binery
 PROXMOX_BACKUP_DEBUG = "/usr/sbin/proxmox-backup-debug"
 
 
-def get_api_data(api_path: str) -> Any:
+def get_api_data(api_path: str, query_parameters: dict = {}) -> Any:
     """Execute proxmox-backup-debug API call and return parsed JSON data."""
     command = [
         PROXMOX_BACKUP_DEBUG,
@@ -35,6 +36,10 @@ def get_api_data(api_path: str) -> Any:
         "--output-format",
         "json",
     ]
+
+    for query_parameter, query_value in query_parameters.items():
+        command.append(f"--{query_parameter}")
+        command.append(str(query_value))
 
     try:
         result = subprocess.run(
@@ -85,6 +90,15 @@ def get_gc_info(store: str) -> dict[str, Any]:
     }
 
 
+def get_tasks(since: int = 0) -> list[dict[str, str]]:
+    """Retrieve Proxmox Backup Server tasks (optional filtered with timestamp)."""
+    api_path = "/nodes/localhost/tasks"
+    query_parameters = {"limit": 0}
+    if since > 0:
+        query_parameters["since"] = since
+    return get_api_data(api_path, query_parameters)
+
+
 def print_version() -> None:
     """Print Proxmox Backup Server version."""
     version = get_version()
@@ -121,7 +135,7 @@ def print_datastores() -> None:
             if entry["estimated-full-date"] != "":
                 # Calculate timespan
                 # Set to zero if timespan is in the past
-                estimated_full_timespan = max(0, int(entry["estimated-full-date"]) - int(time.time()))
+                estimated_full_timespan = max(0, int(entry["estimated-full-date"]) - int(datetime.now().timestamp()))
             else:
                 # Not available
                 estimated_full_timespan = -1
@@ -160,7 +174,71 @@ def print_datastores() -> None:
             print(f"{store_name}: UNKNOWN UNKNOWN")
 
 
+def print_task_summary() -> None:
+    """Print task summary."""
+
+    print("[task_summary]")
+
+    # Get tasks of the last 30 days
+    since = int((datetime.now() - timedelta(days=30)).timestamp())
+    tasks = get_tasks(since)
+
+    status_counter = {"ok": 0, "warning": 0, "error": 0, "unknown": 0}
+    result = {
+        "backup": dict(status_counter),
+        "garbage_collection": dict(status_counter),
+        "prune": dict(status_counter),
+        "sync": dict(status_counter),
+        "tape_backup": dict(status_counter),
+        "tape_restore": dict(status_counter),
+        "other": dict(status_counter),
+        "verify": dict(status_counter),
+    }
+    worker_type_aliases = {
+        "backup": ["backupjob"],
+        "prune": ["prunejob"],
+        "sync": ["syncjob"],
+        "tape_backup": ["tape-backup", "tape-backup-job"],
+        "tape_restore": ["tape-restore"],
+        "verify": ["verificationjob", "verify_group", "verify_snapshot"]
+    }
+
+    # List of known ignored worker_types
+    # acme-deactivate acme-new-cert acme-register acme-renew-cert acme-revoke-cert acme-update aptupdate barcode-label-media catalog-media 
+    # create-datastore delete-datastore delete-namespace dircreate dirremove diskinit eject-media forget-group format-media inventory-update
+    # label-media load-media logrotate mount-device mount-sync-jobs notification-threshold-reset reader realm-sync remove-encryption-key 
+    # rewind-media s3-refresh spiceshell srvreload srvrestart srvstart srvstop termproxy unload-media unmount-device vncshell wipedisk zfscreate
+
+    for task in tasks:
+
+        worker_type = task.get("worker_type", "unknown")
+        status = task.get("status", "not_found").lower()
+
+        # Combine known different worker_type values
+        for real_worker_type, worker_type_alias in worker_type_aliases.items():
+            if worker_type in worker_type_alias:
+                worker_type = real_worker_type
+
+        # Handle warnings
+        if status.startswith("warnings"):
+            status = "warning"
+
+        # Handle non-standard status as error
+        if status not in ["ok", "warning", "unknown", "error"]:
+            status = "error"
+
+        try:
+            result[worker_type][status] += 1
+        except KeyError:
+            result["other"][status] += 1
+
+    # Output summarized counters
+    for status in result:
+        print(f"{status}: {result[status]["ok"]} {result[status]["warning"]} {result[status]["error"]} {result[status]["unknown"]}")
+
+
 def main() -> int:
+
     # Exit silently if command is not available
     if shutil.which(PROXMOX_BACKUP_DEBUG) is None:
         return 0
@@ -174,6 +252,9 @@ def main() -> int:
 
         # Datastores and garbage collection
         print_datastores()
+
+        # Task summary
+        print_task_summary()
 
     except RuntimeError as e:
         print(f"Error: {e}", file=sys.stderr)

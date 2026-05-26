@@ -41,3 +41,12 @@ _METRIC_SPECS_DATASTORES: Mapping[str, Tuple[bool, str, Callable, bool, bool, bo
     # Non-parsed values must be at the end
     'deduplication_factor': (False, 'Deduplication Factor', float, False, True, True),
 }
+
+# Metric specs for task summary
+_METRIC_SPECS_TASK_SUMMARY: Mapping[str, Tuple[str, Callable, bool, bool, bool]] = {
+    # 'metric': ('Metric Name', renderer, notice_only, Levels are lower levels, Levels are upper levels)
+    'ok': ('OK', int, True, False, True),
+    'warning': ('Warnings', int, True, False, True),
+    'error': ('Errors', int, True, False, True),
+    'unknown': ('Unknown', int, True, False, True),
+}

@@ -21,6 +21,15 @@
 # local: nonremovable filesystem 6641242112 600023642112 633523994624 94.71 1771397371 OK 1779271206 6 0 1624563356 597285282328 8340617313837
 # mobile-disk-01: mounted filesystem 257566208000 675756896256 983350071296 68.72 1780559822 OK 1779274270 1270 3576196397 0 674466529488 10527045155076
 # mobile-disk-02: notmounted filesystem
+# [task_summary]
+# backup: 0 0 0 0
+# garbage_collection: 166 0 10 0
+# prune: 86 0 0 0
+# sync: 1851 0 293 2
+# tape_backup: 0 0 0 0
+# tape_restore: 0 0 0 0
+# other: 168 1 3 0
+# verify: 50 0 1 0
 
 import time
 
@@ -53,7 +62,7 @@ class Datastore(TypedDict, total=False):
 
 def parse_proxmox_backup_server(string_table: StringTable) -> Section:
 
-    parsed: Section = {"version": None, "datastores": {}}
+    parsed: Section = {"version": None, "datastores": {}, "task_summary": {}}
     current_section = None
 
     for line in string_table:
@@ -65,9 +74,9 @@ def parse_proxmox_backup_server(string_table: StringTable) -> Section:
             parsed["version"] = line[1]
             continue
 
-        # Detect start of section "datastores"
-        if line[0] == "[datastores]":
-            current_section = "datastores"
+        # Detect sections
+        if line[0].startswith('[') and line[0].endswith("]"):
+            current_section = line[0][1:-1]
             continue
 
         # Section "datastores"
@@ -78,11 +87,11 @@ def parse_proxmox_backup_server(string_table: StringTable) -> Section:
         if current_section == "datastores":
 
             # Ignore line does not start with "<store>:"
-            if not str(line[0]).endswith(":"):
+            if not line[0].endswith(":"):
                 continue
 
             # Get store name
-            store = str(line[0])[:-1]
+            store = line[0][:-1]
 
             # Get values
             metrics: Metrics = {}
@@ -103,7 +112,6 @@ def parse_proxmox_backup_server(string_table: StringTable) -> Section:
                         else:
                             # Convert non-string metrics to integer
                             metrics[metric_spec] = int(line[idx+3])
-                            # [metric_spec] = int(line[idx+3])
 
                 # Calculate deduplication factor
                 metrics["deduplication_factor"] = round(metrics["gc_index_data_bytes"] / int(metrics["gc_disk_bytes"]), 2)
@@ -116,6 +124,25 @@ def parse_proxmox_backup_server(string_table: StringTable) -> Section:
                 datastore["metrics"] = metrics
 
             parsed["datastores"][store] = datastore
+
+        # Section "task_summary"
+        # Format: "<worker_type>: <ok> <warning> <error> <unknown>"
+        if current_section == "task_summary":
+
+            # Ignore line does not start with "<worker_type>:"
+            if not line[0].endswith(":"):
+                continue
+
+            # Get worker type
+            worker_type = line[0][:-1]
+
+            # Get values
+            metrics: Metrics = {}
+
+            for idx, metric_spec in enumerate(proxmox_backup_server_metric_specs._METRIC_SPECS_TASK_SUMMARY):
+                metrics[metric_spec] = int(line[idx+1])
+
+            parsed["task_summary"][worker_type] = metrics
 
     return parsed
 
