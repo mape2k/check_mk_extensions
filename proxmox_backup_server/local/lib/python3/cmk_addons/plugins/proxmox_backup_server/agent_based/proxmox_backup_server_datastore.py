@@ -60,24 +60,24 @@ def check_proxmox_backup_server_datastore(item: str, params: Dict[str, Any], sec
     #          <gc_index_data_bytes>"
     yield Result(
         state=State.OK,
-        notice="Backend: %s" % datastore.get('backend_type'),
+        notice="Backend: %s" % datastore.get("backend_type"),
     )
     yield Result(
         state=State.OK,
-        notice="Mount status: %s" % datastore.get('mount_status'),
+        notice="Mount status: %s" % datastore.get("mount_status"),
     )
 
     # No metrics found
-    if 'metrics' not in datastore:
+    if "metrics" not in datastore:
         if datastore["mount_status"] == "notmounted":
             yield Result(
                 state=State.OK,
-                summary='Datastore not mounted',
+                summary="Datastore not mounted",
             )
         else:
             yield Result(
                 state=State.UNKNOWN,
-                summary='Got incomplete information for this datastore',
+                summary="Got incomplete information for this datastore",
             )
         return
 
@@ -138,8 +138,8 @@ def check_proxmox_backup_server_datastore(item: str, params: Dict[str, Any], sec
                     datastore["metrics"][metric],
                     metric_name=f"proxmox_backup_server_datastore_{metric}",
                     label=label,
-                    levels_lower=params_dict['lower'] if params_dict['lower'] != ('no_levels', None) else None,  # pyright: ignore[reportPossiblyUnboundVariable]
-                    levels_upper=params_dict['upper'] if params_dict['upper'] != ('no_levels', None) else None,  # pyright: ignore[reportPossiblyUnboundVariable]
+                    levels_lower=params_dict["lower"] if params_dict["lower"] != ("no_levels", None) else None,  # pyright: ignore[reportPossiblyUnboundVariable]
+                    levels_upper=params_dict["upper"] if params_dict["upper"] != ("no_levels", None) else None,  # pyright: ignore[reportPossiblyUnboundVariable]
                     render_func=render_func,
                     notice_only=notice_only,
                     boundaries=(0, None),
@@ -150,8 +150,8 @@ def check_proxmox_backup_server_datastore(item: str, params: Dict[str, Any], sec
                     datastore["metrics"][metric],
                     metric_name=f"proxmox_backup_server_datastore_{metric}",
                     label=label,
-                    levels_lower=params.get(metric) if (levels_lower and params.get(metric) != ('no_levels', None)) else None,
-                    levels_upper=params.get(metric) if (levels_upper and params.get(metric) != ('no_levels', None)) else None,
+                    levels_lower=params.get(metric) if (levels_lower and params.get(metric) != ("no_levels", None)) else None,
+                    levels_upper=params.get(metric) if (levels_upper and params.get(metric) != ("no_levels", None)) else None,
                     render_func=render_func,
                     notice_only=notice_only,
                     boundaries=(0, None),
@@ -172,18 +172,14 @@ check_plugin_proxmox_backup_server_datastore = CheckPlugin(
     check_function=check_proxmox_backup_server_datastore,
     check_ruleset_name="proxmox_backup_server_datastore",
     check_default_parameters={
-        # 'avail':                  ('no_levels', None),
-        # 'used':                   ('no_levels', None),
-        # 'total':                  ('no_levels', None),
-        'filled':                   ("fixed", (80.0, 90.0)),
-        'estimated_full_timespan':  ("fixed", (48*60*60, 24*60*60)),
-        # 'gc_state':                 ('no_levels', None),
-        'gc_endtime_timespan':      ("fixed", (26*60*60, 50*60*60)),
-        'gc_duration':              ('no_levels', None),
-        'gc_removed_bytes':         ('no_levels', None),
-        'gc_pending_bytes':         ('no_levels', None),
-        'gc_disk_bytes':            ('no_levels', None),
-        'gc_index_data_bytes':      ('no_levels', None),
-        'deduplication_factor':     {'lower': ('no_levels', None), 'upper': ('no_levels', None)},
+        "filled":                   ("fixed", (80.0, 90.0)),
+        "estimated_full_timespan":  ("fixed", (48*60*60, 24*60*60)),
+        "gc_endtime_timespan":      ("fixed", (26*60*60, 50*60*60)),
+        "gc_duration":              ("no_levels", None),
+        "gc_removed_bytes":         ("no_levels", None),
+        "gc_pending_bytes":         ("no_levels", None),
+        "gc_disk_bytes":            ("no_levels", None),
+        "gc_index_data_bytes":      ("no_levels", None),
+        "deduplication_factor":     {"lower": ("no_levels", None), "upper": ("no_levels", None)},
     },
 )

@@ -23,7 +23,6 @@ from cmk.graphing.v1.metrics import (
     MaximumOf,
     Metric,
     SINotation,
-    StrictPrecision,
     TimeNotation,
     Unit,
 )
@@ -40,21 +39,21 @@ from cmk.graphing.v1.perfometers import (
 metric_proxmox_backup_server_datastore_avail = Metric(
     name="proxmox_backup_server_datastore_avail",
     title=Title("Available space"),
-    unit=Unit(SINotation('bytes'), AutoPrecision(2)),
+    unit=Unit(SINotation("bytes"), AutoPrecision(2)),
     color=Color.PURPLE,
 )
 
 metric_proxmox_backup_server_datastore_used = Metric(
     name="proxmox_backup_server_datastore_used",
     title=Title("Used space"),
-    unit=Unit(SINotation('bytes'), AutoPrecision(2)),
+    unit=Unit(SINotation("bytes"), AutoPrecision(2)),
     color=Color.BLUE,
 )
 
 metric_proxmox_backup_server_datastore_total = Metric(
     name="proxmox_backup_server_datastore_total",
     title=Title("Total space"),
-    unit=Unit(SINotation('bytes'), AutoPrecision(2)),
+    unit=Unit(SINotation("bytes"), AutoPrecision(2)),
     color=Color.GREEN,
 )
 
@@ -112,28 +111,28 @@ metric_proxmox_backup_server_datastore_gc_duration = Metric(
 metric_proxmox_backup_server_datastore_gc_removed_bytes = Metric(
     name="proxmox_backup_server_datastore_gc_removed_bytes",
     title=Title("Garbage Collection - Removed Data"),
-    unit=Unit(SINotation('bytes'), AutoPrecision(2)),
+    unit=Unit(SINotation("bytes"), AutoPrecision(2)),
     color=Color.RED,
 )
 
 metric_proxmox_backup_server_datastore_gc_pending_bytes = Metric(
     name="proxmox_backup_server_datastore_gc_pending_bytes",
     title=Title("Garbage Collection - Pending Data"),
-    unit=Unit(SINotation('bytes'), AutoPrecision(2)),
+    unit=Unit(SINotation("bytes"), AutoPrecision(2)),
     color=Color.LIGHT_RED,
 )
 
 metric_proxmox_backup_server_datastore_gc_disk_bytes = Metric(
     name="proxmox_backup_server_datastore_gc_disk_bytes",
     title=Title("On-Disk usage"),
-    unit=Unit(SINotation('bytes'), AutoPrecision(2)),
+    unit=Unit(SINotation("bytes"), AutoPrecision(2)),
     color=Color.CYAN,
 )
 
 metric_proxmox_backup_server_datastore_gc_index_data_bytes = Metric(
     name="proxmox_backup_server_datastore_gc_index_data_bytes",
     title=Title("Original data usage"),
-    unit=Unit(SINotation('bytes'), AutoPrecision(2)),
+    unit=Unit(SINotation("bytes"), AutoPrecision(2)),
     color=Color.LIGHT_CYAN,
 )
 

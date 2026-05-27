@@ -24,7 +24,7 @@ from cmk.graphing.v1.metrics import (
     Unit,
 )
 
-UNIT_COUNTER = Unit(DecimalNotation(''), StrictPrecision(0))
+UNIT_COUNTER = Unit(DecimalNotation(""), StrictPrecision(0))
 
 metric_proxmox_backup_server_task_summary_backup_ok = Metric(
     name="proxmox_backup_server_task_summary_backup_ok",

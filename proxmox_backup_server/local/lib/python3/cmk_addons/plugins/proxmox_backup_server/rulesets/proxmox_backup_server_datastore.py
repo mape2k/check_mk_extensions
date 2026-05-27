@@ -44,13 +44,12 @@ def _parameter_form_proxmox_backup_server_datastore():
 
     return Dictionary(
         title=Title("Limits"),
-        help_text=Help("Limits for Proxmox Backup Server - Datastore"),
+        help_text=Help("Limits for Proxmox Backup Server Datastore"),
         elements={
             "filled": DictElement(
                 required=False,
                 parameter_form=SimpleLevels(
                     title=Title("Levels for used space"),
-                    # migrate=migrate_to_upper_float_levels,
                     help_text=Help("Set the levels for the maximum percentage of used space."),
                     form_spec_template=Percentage(),
                     level_direction=LevelDirection.UPPER,
@@ -61,7 +60,6 @@ def _parameter_form_proxmox_backup_server_datastore():
                 required=False,
                 parameter_form=SimpleLevels(
                     title=Title("Estimated Full time"),
-                    # migrate=migrate_to_lower_float_levels,
                     help_text=Help("Set the level for the maximum estimated until datastore is full."),
                     form_spec_template=TimeSpan(
                         displayed_magnitudes=[
@@ -79,7 +77,6 @@ def _parameter_form_proxmox_backup_server_datastore():
                 required=False,
                 parameter_form=SimpleLevels(
                     title=Title("Garbage Collector - Last Run before"),
-                    # migrate=migrate_to_lower_float_levels,
                     help_text=Help("Set the level for the maximum age of the last run of the garbage collector."),
                     form_spec_template=TimeSpan(
                         displayed_magnitudes=[
@@ -97,7 +94,6 @@ def _parameter_form_proxmox_backup_server_datastore():
                 required=False,
                 parameter_form=SimpleLevels(
                     title=Title("Garbage Collector - Duration"),
-                    # migrate=migrate_to_lower_float_levels,
                     help_text=Help("Set the level for the maximum duration for a run of the garbage collector."),
                     form_spec_template=TimeSpan(
                         displayed_magnitudes=[
@@ -115,7 +111,6 @@ def _parameter_form_proxmox_backup_server_datastore():
                 required=False,
                 parameter_form=SimpleLevels(
                     title=Title("Garbage Collector - Removed Data"),
-                    # migrate=migrate_to_upper_integer_levels,
                     help_text=Help("Set the level for the maximum size of removed data by the garbage collector."),
                     form_spec_template=DataSize(
                         displayed_magnitudes=[
@@ -133,7 +128,6 @@ def _parameter_form_proxmox_backup_server_datastore():
                 required=False,
                 parameter_form=SimpleLevels(
                     title=Title("Garbage Collector - Pending Data"),
-                    # migrate=migrate_to_upper_integer_levels,
                     help_text=Help("Set the level for the maximum size of pending data by the garbage collector."),
                     form_spec_template=DataSize(
                         displayed_magnitudes=[
@@ -151,7 +145,6 @@ def _parameter_form_proxmox_backup_server_datastore():
                 required=False,
                 parameter_form=SimpleLevels(
                     title=Title("On-Disk usage"),
-                    # migrate=migrate_to_upper_integer_levels,
                     help_text=Help("Set the level for the maximum size of On-Disk usage."),
                     form_spec_template=DataSize(
                         displayed_magnitudes=[
@@ -170,7 +163,6 @@ def _parameter_form_proxmox_backup_server_datastore():
                 required=False,
                 parameter_form=SimpleLevels(
                     title=Title("Original data usage"),
-                    # migrate=migrate_to_upper_integer_levels,
                     help_text=Help("Set the level for the maximum size of Original data usage."),
                     form_spec_template=DataSize(
                         displayed_magnitudes=[
@@ -189,7 +181,6 @@ def _parameter_form_proxmox_backup_server_datastore():
                 required=False,
                 parameter_form=Dictionary(
                     title=Title("Deduplication Factor"),
-                    # migrate=_migrate_lower_integer_levels_to_dict,
                     help_text=Help("Set the levels for the deduplication factor."),
                     elements={
                         "lower": DictElement(
@@ -221,7 +212,7 @@ def _parameter_form_proxmox_backup_server_datastore():
 
 rule_spec_proxmox_backup_server_datastore = CheckParameters(
     name="proxmox_backup_server_datastore",
-    title=Title("Proxmox Backup Server - Datastore"),
+    title=Title("Proxmox Backup Server Datastore"),
     topic=Topic.LINUX,
     parameter_form=_parameter_form_proxmox_backup_server_datastore,
     condition=HostAndItemCondition(item_title=Title("Datastore")),

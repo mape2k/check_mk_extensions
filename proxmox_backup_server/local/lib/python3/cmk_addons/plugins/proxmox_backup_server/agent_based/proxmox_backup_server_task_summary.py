@@ -45,7 +45,7 @@ _WORKER_TYPES_TASK_SUMMARY: Mapping[str, str] = {
 }
 
 _CHECK_DEFAULT_PARAMETERS = {
-    "ok":       ('no_levels', None),
+    "ok":       ("no_levels", None),
     "warning":  ("fixed", (1, 10)),
     "error":    ("fixed", (1, 1)),
     "unknown":  ("fixed", (1, 1)),
@@ -69,7 +69,7 @@ def check_proxmox_backup_server_task_summary(params: Dict[str, Any], section: Se
 
     yield Result(
         state=State.OK,
-        summary=f"Tasks: {sum(int(item['ok'] + int(item["warning"]) + int(item["error"]) + int(item["unknown"])) for item in task_summary.values())}",
+        summary=f"Tasks: {sum(int(item["ok"] + int(item["warning"]) + int(item["error"]) + int(item["unknown"])) for item in task_summary.values())}",
     )
 
     # Check metrics for every worker_type
@@ -98,8 +98,8 @@ def check_proxmox_backup_server_task_summary(params: Dict[str, Any], section: Se
                 task_summary[worker_type][metric],
                 metric_name=f"proxmox_backup_server_task_summary_{worker_type}_{metric}",
                 label=f"{_WORKER_TYPES_TASK_SUMMARY[worker_type]} - {label}",
-                levels_lower=params_dict[metric] if (levels_lower and params_dict[metric] != ('no_levels', None)) else None,  # pyright: ignore[reportPossiblyUnboundVariable]
-                levels_upper=params_dict[metric] if (levels_upper and params_dict[metric] != ('no_levels', None)) else None,  # pyright: ignore[reportPossiblyUnboundVariable]
+                levels_lower=params_dict[metric] if (levels_lower and params_dict[metric] != ("no_levels", None)) else None,  # pyright: ignore[reportPossiblyUnboundVariable]
+                levels_upper=params_dict[metric] if (levels_upper and params_dict[metric] != ("no_levels", None)) else None,  # pyright: ignore[reportPossiblyUnboundVariable]
                 render_func=render_func,
                 notice_only=notice_only,
                 boundaries=(0, None),
