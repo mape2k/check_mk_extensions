@@ -37,9 +37,21 @@ sudo wget https://github.com/mape2k/check_mk_extensions/raw/refs/heads/cmk2.4/pr
 sudo chmod +x /usr/lib/check_mk_agent/plugins/1800/proxmox_backup_server.py
 ```
 
-The plugin uses proxmox-backup-debug to query the API locally.
+The plugin uses proxmox-backup-debug to query the API locally. **The user *root@pam* needs to be enabled!**
+
+## Troubleshooting
+
+If services did not get discovered by checkmk, please check:
+
+1. Did check_mk_agent on your Proxmox Backup Server output contains "**<<<proxmox_backup_server>>>**"?
+2. Login as root on your Proxmox Backup Server and run
+
+   ```
+   /usr/sbin/proxmox-backup-debug api get /version
+   ```
+  You should get a result containing release, repoid and version. Otherwhise check the error message.
 
 ## Changelog
 
 ### 2.4
-  * Initial implementation supporting datastores and task summary
+  * Initial implementation supporting datastores, task summary and sync/prune/verify jobs supporting checkmk 2.4 or newer
