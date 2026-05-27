@@ -99,6 +99,24 @@ def get_tasks(since: int = 0) -> list[dict[str, str]]:
     return get_api_data(api_path, query_parameters)
 
 
+def get_sync_jobs() -> list[dict[str, str]]:
+    """Retrieve Proxmox Backup Server sync jobs."""
+    api_path = "/admin/sync"
+    return get_api_data(api_path, {"sync-direction": "all"})
+
+
+def get_prune_jobs() -> list[dict[str, str]]:
+    """Retrieve Proxmox Backup Server prune jobs."""
+    api_path = "/admin/prune"
+    return get_api_data(api_path)
+
+
+def get_verify_jobs() -> list[dict[str, str]]:
+    """Retrieve Proxmox Backup Server verify jobs."""
+    api_path = "/admin/verify"
+    return get_api_data(api_path)
+
+
 def print_version() -> None:
     """Print Proxmox Backup Server version."""
     version = get_version()
@@ -204,9 +222,9 @@ def print_task_summary() -> None:
     }
 
     # List of known ignored worker_types
-    # acme-deactivate acme-new-cert acme-register acme-renew-cert acme-revoke-cert acme-update aptupdate barcode-label-media catalog-media 
+    # acme-deactivate acme-new-cert acme-register acme-renew-cert acme-revoke-cert acme-update aptupdate barcode-label-media catalog-media
     # create-datastore delete-datastore delete-namespace dircreate dirremove diskinit eject-media forget-group format-media inventory-update
-    # label-media load-media logrotate mount-device mount-sync-jobs notification-threshold-reset reader realm-sync remove-encryption-key 
+    # label-media load-media logrotate mount-device mount-sync-jobs notification-threshold-reset reader realm-sync remove-encryption-key
     # rewind-media s3-refresh spiceshell srvreload srvrestart srvstart srvstop termproxy unload-media unmount-device vncshell wipedisk zfscreate
 
     for task in tasks:
@@ -237,6 +255,83 @@ def print_task_summary() -> None:
         print(f"{status}: {result[status]["ok"]} {result[status]["warning"]} {result[status]["error"]} {result[status]["unknown"]}")
 
 
+def _print_jobs(jobtype: str, data: list[dict[str, str]]) -> None:
+    """Print jobs."""
+
+    print(f"[{jobtype}_jobs]")
+
+    # Get jobs ordered by id
+    jobs = sorted(data, key=lambda x: x.get("id", ""))
+
+    for job in jobs:
+
+        id = job.get("id")
+
+        # Ignore disabled jobs (sync)
+        if job.get("disable", False):
+            continue
+
+        # Sync direction (sync)
+        sync_direction = job.get("sync-direction", "pull")
+
+        if job.get("next-run") and int(job.get("next-run", datetime.now().timestamp()+10)) < int(datetime.now().timestamp()):
+            # Next run is in the past: Job is pending
+            last_run_state = "PENDING"
+            last_run_endtime = 0
+        elif not job.get("last-run-state") and not job.get("last-run-endtime"):
+            # No last-rund-state and -endtime: Job is running
+            last_run_state = "RUNNING"
+            last_run_endtime = 0
+        else:
+            # Anything else
+            last_run_state = job.get("last-run-state", "UNKNOWN")
+            last_run_endtime = job.get("last-run-endtime", 0)
+
+        next_run = job.get("next-run", 0)
+
+        local = job.get("store")
+        ns = job.get("ns", "")
+        if len(ns) > 0:
+            local = f"{local}/{ns}"
+
+        # Remote (sync)
+        remote = job.get("remote", "")
+        remote_store = job.get("remote-store", "")
+        remote_ns = job.get("remote-ns", "")
+        remote = f"{remote}:{remote_store}"
+        if len(remote_ns) > 0:
+            remote = f"{remote}/{remote_ns}"
+
+        max_depth = job.get("max-depth", "Full")
+
+        # Ignore not mounted as OK
+        if job.get("last-run-state", "UNKNOWN").endswith("is not mounted"):
+            last_run_state = "NOTMOUNTED"
+
+        # Any not recognized state is an ERROR
+        if last_run_state not in ["NOTMOUNTED", "OK", "PENDING", "RUNNING", "UNKNOWN"]:
+            last_run_state = "ERROR"
+
+        if jobtype == "sync":
+            # Format sync: "<id>: <state> <last_run> <next_run> <sync_direction> <local> <remote> <max_depth>"
+            print(f"{id}: {last_run_state} {last_run_endtime} {next_run} {sync_direction} {local} {remote} {max_depth}")
+        else:
+            # Format prune/verify: "<id>: <state> <last_run> <next_run> <local> <max_depth>"
+            print(f"{id}: {last_run_state} {last_run_endtime} {next_run} {local} {max_depth}")
+
+
+def print_prune_jobs() -> None:
+    _print_jobs("prune", get_prune_jobs())
+
+
+def print_sync_jobs() -> None:
+    _print_jobs("sync", get_sync_jobs())
+
+
+def print_verify_jobs() -> None:
+    _print_jobs("verify", get_verify_jobs())
+
+
 def main() -> int:
 
     # Exit silently if command is not available
@@ -255,6 +350,15 @@ def main() -> int:
 
         # Task summary
         print_task_summary()
+
+        # Sync jobs
+        print_sync_jobs()
+
+        # Prune jobs
+        print_prune_jobs()
+
+        # Verify jobs
+        print_verify_jobs()
 
     except RuntimeError as e:
         print(f"Error: {e}", file=sys.stderr)

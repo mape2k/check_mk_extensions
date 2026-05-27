@@ -25,28 +25,35 @@ from cmk.agent_based.v2 import (
 
 # Metric specs for datastores
 _METRIC_SPECS_DATASTORES: Mapping[str, Tuple[bool, str, Callable, bool, bool, bool]] = {
-    # 'metric': (parse, 'Metric Name', renderer, notice_only, Levels are lower levels, Levels are upper levels)
-    'avail': (True, 'Available', render.bytes, True, False, False),
-    'used': (True, 'Used', render.bytes, True, False, False),
-    'total': (True, 'Total', render.bytes, True, False, False),
-    'filled': (True, 'Used', render.percent, False, False, True),
-    'estimated_full_timespan': (True, 'Estimated full in', render.timespan, True, True, False),
-    'gc_state': (True, 'GC State', str, True, False, False),
-    'gc_endtime_timespan': (True, 'GC Last Run before', render.timespan, True, False, True),
-    'gc_duration': (True, 'GC Duration', render.timespan, True, False, True),
-    'gc_removed_bytes': (True, 'GC Removed Data', render.bytes, True, False, True),
-    'gc_pending_bytes': (True, 'GC Pending Data', render.bytes, True, False, True),
-    'gc_disk_bytes': (True, 'On-Disk usage', render.bytes, True, False, True),
-    'gc_index_data_bytes': (True, 'Original data usage', render.bytes, True, False, True),
+    # "metric": (parse, "Metric Name", renderer, notice_only, Levels are lower levels, Levels are upper levels)
+    "avail": (True, "Available", render.bytes, True, False, False),
+    "used": (True, "Used", render.bytes, True, False, False),
+    "total": (True, "Total", render.bytes, True, False, False),
+    "filled": (True, "Used", render.percent, False, False, True),
+    "estimated_full_timespan": (True, "Estimated full in", render.timespan, True, True, False),
+    "gc_state": (True, "GC State", str, True, False, False),
+    "gc_endtime_timespan": (True, "GC Last Run before", render.timespan, True, False, True),
+    "gc_duration": (True, "GC Duration", render.timespan, True, False, True),
+    "gc_removed_bytes": (True, "GC Removed Data", render.bytes, True, False, True),
+    "gc_pending_bytes": (True, "GC Pending Data", render.bytes, True, False, True),
+    "gc_disk_bytes": (True, "On-Disk usage", render.bytes, True, False, True),
+    "gc_index_data_bytes": (True, "Original data usage", render.bytes, True, False, True),
     # Non-parsed values must be at the end
-    'deduplication_factor': (False, 'Deduplication Factor', float, False, True, True),
+    "deduplication_factor": (False, "Deduplication Factor", float, False, True, True),
 }
 
 # Metric specs for task summary
 _METRIC_SPECS_TASK_SUMMARY: Mapping[str, Tuple[str, Callable, bool, bool, bool]] = {
-    # 'metric': ('Metric Name', renderer, notice_only, Levels are lower levels, Levels are upper levels)
-    'ok': ('OK', int, True, False, True),
-    'warning': ('Warnings', int, True, False, True),
-    'error': ('Errors', int, True, False, True),
-    'unknown': ('Unknown', int, True, False, True),
+    # "metric": ("Metric Name", renderer, notice_only, Levels are lower levels, Levels are upper levels)
+    "ok": ("OK", int, True, False, True),
+    "warning": ("Warnings", int, True, False, True),
+    "error": ("Errors", int, True, False, True),
+    "unknown": ("Unknown", int, True, False, True),
+}
+
+# Metric specs for jobs
+_METRIC_SPECS_JOB: Mapping[str, Tuple[str, Callable, bool, bool, bool]] = {
+    # "metric": ("Metric Name", renderer, notice_only, Levels are lower levels, Levels are upper levels)
+    "last_run": ("Last run", render.timespan, True, False, True),
+    "next_run": ("Next run", render.timespan, True, False, True),
 }

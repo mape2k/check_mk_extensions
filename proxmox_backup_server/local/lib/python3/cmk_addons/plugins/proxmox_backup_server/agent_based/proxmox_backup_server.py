@@ -30,6 +30,18 @@
 # tape_restore: 0 0 0 0
 # other: 168 1 3 0
 # verify: 50 0 1 0
+# [sync_jobs]
+# s-54c9245e-a0b8: ERROR 1779825601 1779829200 pull local/pve1.example.org proxmox-backup.example.org:local/pve1.example.org 0
+# s-b3565376-c06a: OK 1779825600 1779829200 push local/pve2.example.org proxmox-backup.example.org:local/pve2.example.org 1
+# s-ec9ae6b0-20c4: NOTMOUNTED 1779769800 1779856200 pull mobile-disk-01 proxmox-backup.example.org:local Full
+# [prune_jobs]
+# s-902c8dea-03e7: OK 1779827400 1779913800 local/pve1.example.org 0
+# s-5148965e-d0cd: OK 0 1779826800 mobile-disk-01 Full
+# s-9b04d22c-389b: PENDING 0 1779826800 mobile-disk-02 Full
+# [verify_jobs]
+# v-81d035b0-e0b2: OK 1779766987 1779852600 local Full
+# v-90e4fc0b-7506: OK 1779692412 1779778800 mobile-disk-01 Full
+# v-b00a0f32-a07f: PENDING 1779778805 1779865200 mobile-disk-02 Full
 
 import time
 
@@ -60,9 +72,26 @@ class Datastore(TypedDict, total=False):
     metrics: Dict[str, Any]
 
 
+class Job(TypedDict, total=False):
+    state: str
+    local: str
+    max_depth: Any
+    metrics: Dict[str, Any]
+    # Only required for sync jobs
+    sync_direction: str
+    remote: str
+
+
 def parse_proxmox_backup_server(string_table: StringTable) -> Section:
 
-    parsed: Section = {"version": None, "datastores": {}, "task_summary": {}}
+    parsed: Section = {
+        "version": None,
+        "datastores": {},
+        "task_summary": {},
+        "sync_jobs": {},
+        "prune_jobs": {},
+        "verify_jobs": {},
+    }
     current_section = None
 
     for line in string_table:
@@ -75,7 +104,7 @@ def parse_proxmox_backup_server(string_table: StringTable) -> Section:
             continue
 
         # Detect sections
-        if line[0].startswith('[') and line[0].endswith("]"):
+        if line[0].startswith("[") and line[0].endswith("]"):
             current_section = line[0][1:-1]
             continue
 
@@ -127,7 +156,7 @@ def parse_proxmox_backup_server(string_table: StringTable) -> Section:
 
         # Section "task_summary"
         # Format: "<worker_type>: <ok> <warning> <error> <unknown>"
-        if current_section == "task_summary":
+        elif current_section == "task_summary":
 
             # Ignore line does not start with "<worker_type>:"
             if not line[0].endswith(":"):
@@ -142,7 +171,50 @@ def parse_proxmox_backup_server(string_table: StringTable) -> Section:
             for idx, metric_spec in enumerate(proxmox_backup_server_metric_specs._METRIC_SPECS_TASK_SUMMARY):
                 metrics[metric_spec] = int(line[idx+1])
 
+            # Add metrics
             parsed["task_summary"][worker_type] = metrics
+
+        # Section "sync_jobs", "prune_jobs" / "verify_jobs"
+        # Format sync: "<id>: <state> <last_run> <next_run> <sync_direction> <local> <remote> <max_depth>"
+        # Format prune/verify: "<id>: <state> <last_run> <next_run> <local> <max_depth>"
+        elif current_section in ["sync_jobs", "prune_jobs", "verify_jobs"]:
+
+            # Ignore line does not start with "<id>:"
+            if not line[0].endswith(":"):
+                continue
+
+            # Get id
+            id = line[0][:-1]
+
+            # Get values
+            metrics: Metrics = {}
+            job: Job = {}
+            if current_section == "sync_jobs":
+                # Sync job
+                job["state"] = line[1]
+                job["sync_direction"] = line[4]
+                job["local"] = line[5]
+                job["remote"] = line[6]
+                job["max_depth"] = line[7] if line[7] == "Full" else int(line[7])
+            else:
+                # Prune job / Verify job
+                job["state"] = line[1]
+                job["local"] = line[4]
+                job["max_depth"] = line[5] if line[5] == "Full" else int(line[5])
+
+            for idx, metric_spec in enumerate(proxmox_backup_server_metric_specs._METRIC_SPECS_JOB):
+                if proxmox_backup_server_metric_specs._METRIC_SPECS_JOB[metric_spec][1] == render.timespan:
+                    # Create absolute difference of time
+                    metrics[metric_spec] = abs(int(time.time())-int(line[idx+2]))
+                else:
+                    # Convert non-string metrics to integer
+                    metrics[metric_spec] = int(line[idx+2])
+
+            # Add metrics
+            job["metrics"] = metrics
+
+            # Add metrics
+            parsed[current_section][id] = job
 
     return parsed
 
@@ -153,7 +225,7 @@ def discover_proxmox_backup_server(section: Section) -> DiscoveryResult:
 
 def check_proxmox_backup_server(section: Section) -> CheckResult:
 
-    version = section.get('version')
+    version = section.get("version")
     if version is not None:
         yield Result(state=State.OK, summary=f"Version: {version}")
     else:
