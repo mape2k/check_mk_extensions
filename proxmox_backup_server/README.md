@@ -1,6 +1,15 @@
 # Proxmox Backup Server
 
-The client plugin will check the Proxmox Backup Server.
+This agent plugin checks datastores, task summary as well as prune, sync and verify jobs from Proxmox Backup server.
+
+## TODO: Tape backup and restore jobs
+
+Since I do not use tapes anymore the monitoring of
+
+* Tape backup jobs and
+* Tape restore jobs
+
+is currently not implemented. I would be happy to implement these features if someone who uses tape backups could assist me required outputs and testing.
 
 ## (Manual) Installation
 

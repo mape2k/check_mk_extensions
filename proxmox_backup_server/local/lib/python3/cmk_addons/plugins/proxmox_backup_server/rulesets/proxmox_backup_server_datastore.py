@@ -152,7 +152,7 @@ def _parameter_form_proxmox_backup_server_datastore():
                             IECMagnitude.KIBI,
                             IECMagnitude.MEBI,
                             IECMagnitude.GIBI,
-                            IECMagnitude.TIBI,
+                            IECMagnitude.TEBI,
                         ]
                     ),
                     level_direction=LevelDirection.UPPER,
@@ -170,7 +170,7 @@ def _parameter_form_proxmox_backup_server_datastore():
                             IECMagnitude.KIBI,
                             IECMagnitude.MEBI,
                             IECMagnitude.GIBI,
-                            IECMagnitude.TIBI,
+                            IECMagnitude.TEBI,
                         ]
                     ),
                     level_direction=LevelDirection.UPPER,

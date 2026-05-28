@@ -5,8 +5,7 @@ author: Marcel Pennewiss <opensource@pennewiss.de>
 license: GPL
 distribution: check_mk
 description:
- This check receives data from the agent plugin proxmox_backup_server.
- You can monitor the site, utilization and garbage collector status of all mounted or unremovable datastores.
+ This agent plugin checks datastores, task summary as well as prune, sync and verify jobs from Proxmox Backup server.
 
 inventory:
- One service is created on each datastore. The levels can be configured.
+ One service is created on each datastore and job. The levels can be configured.
