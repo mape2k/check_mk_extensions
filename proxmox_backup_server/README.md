@@ -1,6 +1,6 @@
 # Proxmox Backup Server
 
-This agent plugin checks datastores, task summary as well as prune, sync and verify jobs from Proxmox Backup server.
+This agent plugin checks datastores, task summary (of the last day) as well as prune, sync and verify jobs from Proxmox Backup server.
 
 ## TODO: Tape backup and restore jobs
 

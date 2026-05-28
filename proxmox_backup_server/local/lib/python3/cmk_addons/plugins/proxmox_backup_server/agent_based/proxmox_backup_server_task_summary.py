@@ -35,7 +35,7 @@ Section = Dict[str, Any]
 
 _WORKER_TYPES_TASK_SUMMARY: Mapping[str, str] = {
     "backup": "Backups",
-    "garbage_collection": "Garbage collection",
+    "garbage_collection": "Garbage collections",
     "other": "Other",
     "prune": "Prunes",
     "sync": "Syncs",
@@ -45,10 +45,11 @@ _WORKER_TYPES_TASK_SUMMARY: Mapping[str, str] = {
 }
 
 _CHECK_DEFAULT_PARAMETERS = {
-    "ok":       ("no_levels", None),
-    "warning":  ("fixed", (1, 10)),
-    "error":    ("fixed", (1, 1)),
-    "unknown":  ("fixed", (1, 1)),
+    "ok":           ("no_levels", None),
+    "warning":      ("fixed", (1, 10)),
+    "error":        ("fixed", (1, 1)),
+    "unknown":      ("fixed", (1, 1)),
+    "notmounted":   ("no_levels", None),
 }
 
 
@@ -69,7 +70,7 @@ def check_proxmox_backup_server_task_summary(params: Dict[str, Any], section: Se
 
     yield Result(
         state=State.OK,
-        summary=f"Tasks: {sum(int(item["ok"] + int(item["warning"]) + int(item["error"]) + int(item["unknown"])) for item in task_summary.values())}",
+        summary=f"Tasks: {sum(int(item["ok"] + int(item["warning"]) + int(item["error"]) + int(item["unknown"] + int(item["notmounted"]))) for item in task_summary.values())}",
     )
 
     # Check metrics for every worker_type

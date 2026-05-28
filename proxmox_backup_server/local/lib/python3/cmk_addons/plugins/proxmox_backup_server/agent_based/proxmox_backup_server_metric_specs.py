@@ -49,6 +49,7 @@ _METRIC_SPECS_TASK_SUMMARY: Mapping[str, Tuple[str, Callable, bool, bool, bool]]
     "warning": ("Warnings", int, True, False, True),
     "error": ("Errors", int, True, False, True),
     "unknown": ("Unknown", int, True, False, True),
+    "notmounted": ("Not Mounted", int, True, False, True),
 }
 
 # Metric specs for jobs

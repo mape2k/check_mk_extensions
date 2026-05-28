@@ -22,14 +22,14 @@
 # mobile-disk-01: mounted filesystem 257566208000 675756896256 983350071296 68.72 1780559822 OK 1779274270 1270 3576196397 0 674466529488 10527045155076
 # mobile-disk-02: notmounted filesystem
 # [task_summary]
-# backup: 0 0 0 0
-# garbage_collection: 166 0 10 0
-# prune: 86 0 0 0
-# sync: 1851 0 293 2
-# tape_backup: 0 0 0 0
-# tape_restore: 0 0 0 0
-# other: 168 1 3 0
-# verify: 50 0 1 0
+# backup: 0 0 0 0 0
+# garbage_collection: 166 0 10 0 0
+# prune: 86 0 0 0 0
+# sync: 1851 0 293 2 5
+# tape_backup: 0 0 0 0 0
+# tape_restore: 0 0 0 0 0
+# other: 168 1 3 0 0
+# verify: 50 0 1 0 0
 # [sync_jobs]
 # s-54c9245e-a0b8: ERROR 1779825601 1779829200 pull local/pve1.example.org proxmox-backup.example.org:local/pve1.example.org 0
 # s-b3565376-c06a: OK 1779825600 1779829200 push local/pve2.example.org proxmox-backup.example.org:local/pve2.example.org 1
@@ -155,7 +155,7 @@ def parse_proxmox_backup_server(string_table: StringTable) -> Section:
             parsed["datastores"][store] = datastore
 
         # Section "task_summary"
-        # Format: "<worker_type>: <ok> <warning> <error> <unknown>"
+        # Format: "<worker_type>: <ok> <warning> <error> <unknown> <notmounted>"
         elif current_section == "task_summary":
 
             # Ignore line does not start with "<worker_type>:"

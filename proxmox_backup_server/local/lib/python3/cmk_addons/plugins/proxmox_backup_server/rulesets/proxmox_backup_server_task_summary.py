@@ -35,7 +35,7 @@ from cmk.rulesets.v1.rule_specs import (
 )
 
 
-def _parameter_form_proxmox_backup_server_task_summary_subform(title: str) -> DictElement:
+def _parameter_form_proxmox_backup_server_task_summary_elements(title: str) -> DictElement:
 
     return DictElement(
         required=False,
@@ -91,6 +91,18 @@ def _parameter_form_proxmox_backup_server_task_summary_subform(title: str) -> Di
                         prefill_fixed_levels=InputHint(value=(1, 1)),
                     ),
                 ),
+                "notmounted": DictElement(
+                    required=True,
+                    parameter_form=SimpleLevels(
+                        title=Title("Tasks with not mounted datastores"),
+                        form_spec_template=Integer(
+                            unit_symbol=""
+                        ),
+                        level_direction=LevelDirection.UPPER,
+                        prefill_levels_type=DefaultValue(value=LevelsType.NONE),
+                        prefill_fixed_levels=InputHint(value=(0, 0)),
+                    ),
+                ),
             },
         )
     )
@@ -102,14 +114,14 @@ def _parameter_form_proxmox_backup_server_task_summary():
         title=Title("Limits"),
         help_text=Help("Limits for Proxmox Backup Server Task Summary"),
         elements={
-            "backup": _parameter_form_proxmox_backup_server_task_summary_subform("Backup"),
-            "garbage_collection": _parameter_form_proxmox_backup_server_task_summary_subform("Garbage collection"),
-            "other": _parameter_form_proxmox_backup_server_task_summary_subform("Other"),
-            "prune": _parameter_form_proxmox_backup_server_task_summary_subform("Prunes"),
-            "sync": _parameter_form_proxmox_backup_server_task_summary_subform("Syncs"),
-            "tape_backup": _parameter_form_proxmox_backup_server_task_summary_subform("Tape Backup"),
-            "tape_restore": _parameter_form_proxmox_backup_server_task_summary_subform("Tape Restore"),
-            "verify": _parameter_form_proxmox_backup_server_task_summary_subform("Verify"),
+            "backup": _parameter_form_proxmox_backup_server_task_summary_elements("Backups"),
+            "garbage_collection": _parameter_form_proxmox_backup_server_task_summary_elements("Garbage collections"),
+            "other": _parameter_form_proxmox_backup_server_task_summary_elements("Other"),
+            "prune": _parameter_form_proxmox_backup_server_task_summary_elements("Prunes"),
+            "sync": _parameter_form_proxmox_backup_server_task_summary_elements("Syncs"),
+            "tape_backup": _parameter_form_proxmox_backup_server_task_summary_elements("Tape Backup"),
+            "tape_restore": _parameter_form_proxmox_backup_server_task_summary_elements("Tape Restore"),
+            "verify": _parameter_form_proxmox_backup_server_task_summary_elements("Verify"),
         }
     )
 

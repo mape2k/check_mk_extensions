@@ -197,11 +197,11 @@ def print_task_summary() -> None:
 
     print("[task_summary]")
 
-    # Get tasks of the last 30 days
-    since = int((datetime.now() - timedelta(days=30)).timestamp())
+    # Get tasks of the last day
+    since = int((datetime.now() - timedelta(days=1)).timestamp())
     tasks = get_tasks(since)
 
-    status_counter = {"ok": 0, "warning": 0, "error": 0, "unknown": 0}
+    status_counter = {"ok": 0, "warning": 0, "error": 0, "unknown": 0, "notmounted": 0}
     result = {
         "backup": dict(status_counter),
         "garbage_collection": dict(status_counter),
@@ -241,8 +241,12 @@ def print_task_summary() -> None:
         if status.startswith("warnings"):
             status = "warning"
 
+        # Handle not mounted for sync, prune, verify
+        if worker_type in ["prune", "sync", "verify"] and status.endswith("is not mounted"):
+            status = "notmounted"
+
         # Handle non-standard status as error
-        if status not in ["ok", "warning", "unknown", "error"]:
+        if status not in ["ok", "warning", "unknown", "error",  "notmounted"]:
             status = "error"
 
         try:
@@ -252,16 +256,17 @@ def print_task_summary() -> None:
 
     # Output summarized counters
     for status in result:
-        print(f"{status}: {result[status]["ok"]} {result[status]["warning"]} {result[status]["error"]} {result[status]["unknown"]}")
+        print(f"{status}: {result[status]["ok"]} {result[status]["warning"]} {result[status]["error"]} {result[status]["unknown"]} {result[status]["notmounted"]}")
 
 
 def _print_jobs(jobtype: str, data: list[dict[str, str]]) -> None:
     """Print jobs."""
 
-    print(f"[{jobtype}_jobs]")
-
     # Get jobs ordered by id
     jobs = sorted(data, key=lambda x: x.get("id", ""))
+
+    if len(jobs) > 0:
+        print(f"[{jobtype}_jobs]")
 
     for job in jobs:
 
@@ -351,13 +356,9 @@ def main() -> int:
         # Task summary
         print_task_summary()
 
-        # Sync jobs
-        print_sync_jobs()
-
-        # Prune jobs
+        # Jobs
         print_prune_jobs()
-
-        # Verify jobs
+        print_sync_jobs()
         print_verify_jobs()
 
     except RuntimeError as e:

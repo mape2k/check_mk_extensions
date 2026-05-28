@@ -28,7 +28,7 @@ UNIT_COUNTER = Unit(DecimalNotation(""), StrictPrecision(0))
 
 metric_proxmox_backup_server_task_summary_backup_ok = Metric(
     name="proxmox_backup_server_task_summary_backup_ok",
-    title=Title("Backups - Tasks OK"),
+    title=Title("Backups - OK"),
     unit=UNIT_COUNTER,
     color=Color.GREEN,
 )
@@ -47,44 +47,58 @@ metric_proxmox_backup_server_task_summary_backup_error = Metric(
     color=Color.RED,
 )
 
+metric_proxmox_backup_server_task_summary_backup_notmounted = Metric(
+    name="proxmox_backup_server_task_summary_backup_notmounted",
+    title=Title("Backup - Not mounted"),
+    unit=UNIT_COUNTER,
+    color=Color.BLUE,
+)
+
 metric_proxmox_backup_server_task_summary_backup_unknown = Metric(
     name="proxmox_backup_server_task_summary_backup_unknown",
-    title=Title("Backups - Tasks Unknown"),
+    title=Title("Backups - Unknown"),
     unit=UNIT_COUNTER,
     color=Color.LIGHT_GRAY,
 )
 
 metric_proxmox_backup_server_task_summary_garbage_collection_ok = Metric(
     name="proxmox_backup_server_task_summary_garbage_collection_ok",
-    title=Title("Garbage collection - Tasks OK"),
+    title=Title("Garbage collections - OK"),
     unit=UNIT_COUNTER,
     color=Color.GREEN,
 )
 
 metric_proxmox_backup_server_task_summary_garbage_collection_warning = Metric(
     name="proxmox_backup_server_task_summary_garbage_collection_warning",
-    title=Title("Garbage collection - Warnings"),
+    title=Title("Garbage collections - Warnings"),
     unit=UNIT_COUNTER,
     color=Color.YELLOW,
 )
 
 metric_proxmox_backup_server_task_summary_garbage_collection_error = Metric(
     name="proxmox_backup_server_task_summary_garbage_collection_error",
-    title=Title("Garbage collection - Errors"),
+    title=Title("Garbage collections - Errors"),
     unit=UNIT_COUNTER,
     color=Color.RED,
 )
 
+metric_proxmox_backup_server_task_summary_garbage_collection_notmounted = Metric(
+    name="proxmox_backup_server_task_summary_garbage_collection_notmounted",
+    title=Title("Garbage collections - Not mounted"),
+    unit=UNIT_COUNTER,
+    color=Color.BLUE,
+)
+
 metric_proxmox_backup_server_task_summary_garbage_collection_unknown = Metric(
     name="proxmox_backup_server_task_summary_garbage_collection_unknown",
-    title=Title("Garbage collection - Tasks Unknown"),
+    title=Title("Garbage collections - Unknown"),
     unit=UNIT_COUNTER,
     color=Color.LIGHT_GRAY,
 )
 
 metric_proxmox_backup_server_task_summary_other_ok = Metric(
     name="proxmox_backup_server_task_summary_other_ok",
-    title=Title("Other - Tasks OK"),
+    title=Title("Other - OK"),
     unit=UNIT_COUNTER,
     color=Color.GREEN,
 )
@@ -103,16 +117,23 @@ metric_proxmox_backup_server_task_summary_other_error = Metric(
     color=Color.RED,
 )
 
+metric_proxmox_backup_server_task_summary_other_notmounted = Metric(
+    name="proxmox_backup_server_task_summary_other_notmounted",
+    title=Title("Other - Not mounted"),
+    unit=UNIT_COUNTER,
+    color=Color.BLUE,
+)
+
 metric_proxmox_backup_server_task_summary_other_unknown = Metric(
     name="proxmox_backup_server_task_summary_other_unknown",
-    title=Title("Other - Tasks Unknown"),
+    title=Title("Other - Unknown"),
     unit=UNIT_COUNTER,
     color=Color.LIGHT_GRAY,
 )
 
 metric_proxmox_backup_server_task_summary_prune_ok = Metric(
     name="proxmox_backup_server_task_summary_prune_ok",
-    title=Title("Prunes - Tasks OK"),
+    title=Title("Prunes - OK"),
     unit=UNIT_COUNTER,
     color=Color.GREEN,
 )
@@ -131,16 +152,23 @@ metric_proxmox_backup_server_task_summary_prune_error = Metric(
     color=Color.RED,
 )
 
+metric_proxmox_backup_server_task_summary_prune_notmounted = Metric(
+    name="proxmox_backup_server_task_summary_prune_notmounted",
+    title=Title("Prunes - Not mounted"),
+    unit=UNIT_COUNTER,
+    color=Color.BLUE,
+)
+
 metric_proxmox_backup_server_task_summary_prune_unknown = Metric(
     name="proxmox_backup_server_task_summary_prune_unknown",
-    title=Title("Prunes - Tasks Unknown"),
+    title=Title("Prunes - Unknown"),
     unit=UNIT_COUNTER,
     color=Color.LIGHT_GRAY,
 )
 
 metric_proxmox_backup_server_task_summary_sync_ok = Metric(
     name="proxmox_backup_server_task_summary_sync_ok",
-    title=Title("Syncs - Tasks OK"),
+    title=Title("Syncs - OK"),
     unit=UNIT_COUNTER,
     color=Color.GREEN,
 )
@@ -159,44 +187,58 @@ metric_proxmox_backup_server_task_summary_sync_error = Metric(
     color=Color.RED,
 )
 
+metric_proxmox_backup_server_task_summary_sync_notmounted = Metric(
+    name="proxmox_backup_server_task_summary_sync_notmounted",
+    title=Title("Syncs - Not mounted"),
+    unit=UNIT_COUNTER,
+    color=Color.BLUE,
+)
+
 metric_proxmox_backup_server_task_summary_sync_unknown = Metric(
     name="proxmox_backup_server_task_summary_sync_unknown",
-    title=Title("Syncs - Tasks Unknown"),
+    title=Title("Syncs - Unknown"),
     unit=UNIT_COUNTER,
     color=Color.LIGHT_GRAY,
 )
 
 metric_proxmox_backup_server_task_summary_tape_backup_ok = Metric(
     name="proxmox_backup_server_task_summary_tape_backup_ok",
-    title=Title("Tape-Backup - Tasks OK"),
+    title=Title("Tape Backup - OK"),
     unit=UNIT_COUNTER,
     color=Color.GREEN,
 )
 
 metric_proxmox_backup_server_task_summary_tape_backup_warning = Metric(
     name="proxmox_backup_server_task_summary_tape_backup_warning",
-    title=Title("Tape-Backup - Warnings"),
+    title=Title("Tape Backup - Warnings"),
     unit=UNIT_COUNTER,
     color=Color.YELLOW,
 )
 
 metric_proxmox_backup_server_task_summary_tape_backup_error = Metric(
     name="proxmox_backup_server_task_summary_tape_backup_error",
-    title=Title("Tape-Backup - Errors"),
+    title=Title("Tape Backup - Errors"),
     unit=UNIT_COUNTER,
     color=Color.RED,
 )
 
+metric_proxmox_backup_server_task_summary_tape_backup_notmounted = Metric(
+    name="proxmox_backup_server_task_summary_tape_backup_notmounted",
+    title=Title("Tape Backup - Not mounted"),
+    unit=UNIT_COUNTER,
+    color=Color.BLUE,
+)
+
 metric_proxmox_backup_server_task_summary_tape_backup_unknown = Metric(
     name="proxmox_backup_server_task_summary_tape_backup_unknown",
-    title=Title("Tape-Backup - Tasks Unknown"),
+    title=Title("Tape Backup - Unknown"),
     unit=UNIT_COUNTER,
     color=Color.LIGHT_GRAY,
 )
 
 metric_proxmox_backup_server_task_summary_tape_restore_ok = Metric(
     name="proxmox_backup_server_task_summary_tape_restore_ok",
-    title=Title("Tape Restore - Tasks OK"),
+    title=Title("Tape Restore - OK"),
     unit=UNIT_COUNTER,
     color=Color.GREEN,
 )
@@ -215,16 +257,23 @@ metric_proxmox_backup_server_task_summary_tape_restore_error = Metric(
     color=Color.RED,
 )
 
+metric_proxmox_backup_server_task_summary_tape_restore_notmounted = Metric(
+    name="proxmox_backup_server_task_summary_tape_restore_notmounted",
+    title=Title("Tape Restore - Not mounted"),
+    unit=UNIT_COUNTER,
+    color=Color.BLUE,
+)
+
 metric_proxmox_backup_server_task_summary_tape_restore_unknown = Metric(
     name="proxmox_backup_server_task_summary_tape_restore_unknown",
-    title=Title("Tape Restore - Tasks Unknown"),
+    title=Title("Tape Restore - Unknown"),
     unit=UNIT_COUNTER,
     color=Color.LIGHT_GRAY,
 )
 
 metric_proxmox_backup_server_task_summary_verify_ok = Metric(
     name="proxmox_backup_server_task_summary_verify_ok",
-    title=Title("Verify - Tasks OK"),
+    title=Title("Verify - OK"),
     unit=UNIT_COUNTER,
     color=Color.GREEN,
 )
@@ -243,9 +292,16 @@ metric_proxmox_backup_server_task_summary_verify_error = Metric(
     color=Color.RED,
 )
 
+metric_proxmox_backup_server_task_summary_verify_notmounted = Metric(
+    name="proxmox_backup_server_task_summary_verify_notmounted",
+    title=Title("Verify - Not mounted"),
+    unit=UNIT_COUNTER,
+    color=Color.BLUE,
+)
+
 metric_proxmox_backup_server_task_summary_verify_unknown = Metric(
     name="proxmox_backup_server_task_summary_verify_unknown",
-    title=Title("Verify - Tasks Unknown"),
+    title=Title("Verify - Unknown"),
     unit=UNIT_COUNTER,
     color=Color.LIGHT_GRAY,
 )
