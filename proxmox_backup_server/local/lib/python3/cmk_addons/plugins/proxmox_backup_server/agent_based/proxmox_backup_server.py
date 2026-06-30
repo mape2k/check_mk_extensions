@@ -130,27 +130,32 @@ def parse_proxmox_backup_server(string_table: StringTable) -> Section:
             }
 
             # Parse metrics from specs for mounted and nonremoval
-            if datastore["mount_status"] in ["mounted", "nonremovable"]:
-                for idx, metric_spec in enumerate(proxmox_backup_server_metric_specs._METRIC_SPECS_DATASTORES):
-                    parse_metric = proxmox_backup_server_metric_specs._METRIC_SPECS_DATASTORES[metric_spec][0]
-                    if len(line) >= idx+3 and parse_metric:
-                        if proxmox_backup_server_metric_specs._METRIC_SPECS_DATASTORES[metric_spec][2] == str:
-                            metrics[metric_spec] = line[idx+3]
-                        elif proxmox_backup_server_metric_specs._METRIC_SPECS_DATASTORES[metric_spec][2] is render.percent:
-                            metrics[metric_spec] = float(line[idx+3])
-                        else:
-                            # Convert non-string metrics to integer
-                            metrics[metric_spec] = int(line[idx+3])
+            try:
+                if datastore["mount_status"] in ["mounted", "nonremovable"]:
+                    for idx, metric_spec in enumerate(proxmox_backup_server_metric_specs._METRIC_SPECS_DATASTORES):
+                        parse_metric = proxmox_backup_server_metric_specs._METRIC_SPECS_DATASTORES[metric_spec][0]
+                        if len(line) >= idx+3 and parse_metric:
+                            if proxmox_backup_server_metric_specs._METRIC_SPECS_DATASTORES[metric_spec][2] == str:
+                                metrics[metric_spec] = line[idx+3]
+                            elif proxmox_backup_server_metric_specs._METRIC_SPECS_DATASTORES[metric_spec][2] is render.percent:
+                                metrics[metric_spec] = float(line[idx+3])
+                            else:
+                                # Convert non-string metrics to integer
+                                metrics[metric_spec] = int(line[idx+3])
 
-                # Calculate deduplication factor
-                metrics["deduplication_factor"] = round(metrics["gc_index_data_bytes"] / int(metrics["gc_disk_bytes"]), 2)
+                    # Calculate deduplication factor
+                    metrics["deduplication_factor"] = round(metrics["gc_index_data_bytes"] / int(metrics["gc_disk_bytes"]), 2)
 
-                # Calculate timespan from Garbage Collection Endtime
-                # (done on server to prevent overdue caused by cached agent results)
-                metrics["gc_endtime_timespan"] = int(time.time())-metrics["gc_endtime_timespan"]
+                    # Calculate timespan from Garbage Collection Endtime
+                    # (done on server to prevent overdue caused by cached agent results)
+                    metrics["gc_endtime_timespan"] = int(time.time())-metrics["gc_endtime_timespan"]
 
-                # Add metrics
-                datastore["metrics"] = metrics
+                    # Add metrics
+                    datastore["metrics"] = metrics
+
+            except (KeyError, TypeError, ValueError):
+                # Ignore entry for datastrore due to errors in conversion
+                pass
 
             parsed["datastores"][store] = datastore
 
