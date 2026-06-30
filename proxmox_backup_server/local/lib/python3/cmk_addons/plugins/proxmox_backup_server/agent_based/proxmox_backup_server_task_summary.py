@@ -76,10 +76,17 @@ def check_proxmox_backup_server_task_summary(params: Dict[str, Any], section: Se
     # Check metrics for every worker_type
     for worker_type in task_summary:
 
+        # Parameters for worker_type must be dict
+        if not isinstance(params.get(worker_type), dict):
+            yield Result(
+                state=State.UNKNOWN,
+                notice=f"Parameters for {_WORKER_TYPES_TASK_SUMMARY[worker_type]} has wrong type. Please review your rules.",
+            )
+            continue
+
         # Convert dictionaries
-        if isinstance(params.get(worker_type), dict):
-            params_any: Any = params.get(worker_type)
-            params_dict: dict = params_any
+        params_any: Any = params.get(worker_type)
+        params_dict: dict = params_any
 
         for metric in proxmox_backup_server_metric_specs._METRIC_SPECS_TASK_SUMMARY:
 
@@ -94,13 +101,21 @@ def check_proxmox_backup_server_task_summary(params: Dict[str, Any], section: Se
                 )
                 continue
 
+            # Missing parameters
+            if metric not in params_dict:
+                yield Result(
+                    state=State.UNKNOWN,
+                    notice=f"Parameters for Counter '{metric}' missed for {_WORKER_TYPES_TASK_SUMMARY[worker_type]}. Please review your rules.",
+                )
+                continue
+
             # Metric with single or no levels
             yield from check_levels(
                 task_summary[worker_type][metric],
                 metric_name=f"proxmox_backup_server_task_summary_{worker_type}_{metric}",
                 label=f"{_WORKER_TYPES_TASK_SUMMARY[worker_type]} - {label}",
-                levels_lower=params_dict[metric] if (levels_lower and params_dict[metric] != ("no_levels", None)) else None,  # pyright: ignore[reportPossiblyUnboundVariable]
-                levels_upper=params_dict[metric] if (levels_upper and params_dict[metric] != ("no_levels", None)) else None,  # pyright: ignore[reportPossiblyUnboundVariable]
+                levels_lower=params_dict[metric] if (levels_lower and params_dict[metric] != ("no_levels", None)) else None,
+                levels_upper=params_dict[metric] if (levels_upper and params_dict[metric] != ("no_levels", None)) else None,
                 render_func=render_func,
                 notice_only=notice_only,
                 boundaries=(0, None),
