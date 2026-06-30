@@ -14,6 +14,8 @@
 # to the Free Software Foundation, Inc., 51 Franklin St,  Fifth Floor,
 # Boston, MA 02110-1301 USA.
 
+# Version: 2.4.1
+
 import json
 import shutil
 import subprocess
@@ -80,13 +82,14 @@ def get_gc_info(store: str) -> dict[str, Any]:
     data = get_api_data(api_path)
 
     return {
-        "gc_last_run_state": data.get("last-run-state", "UNKNOWN"),
-        "gc_last_run_endtime": data.get("last-run-endtime", "UNKNOWN"),
-        "gc_duration": data.get("duration", "UNKNOWN"),
-        "gc_removed_bytes": data.get("removed-bytes", "UNKNOWN"),
-        "gc_pending_bytes": data.get("pending-bytes", "UNKNOWN"),
-        "gc_disk_bytes": data.get("disk-bytes", "UNKNOWN"),
-        "gc_index_data_bytes": data.get("index-data-bytes", "UNKNOWN"),
+        # Assume running on missing state
+        "gc_last_run_state": data.get("last-run-state", "RUNNING"),
+        "gc_last_run_endtime": data.get("last-run-endtime", 0),
+        "gc_duration": data.get("duration", 0),
+        "gc_removed_bytes": data.get("removed-bytes", 0),
+        "gc_pending_bytes": data.get("pending-bytes", 0),
+        "gc_disk_bytes": data.get("disk-bytes", 0),
+        "gc_index_data_bytes": data.get("index-data-bytes", 0),
     }
 
 
@@ -158,7 +161,7 @@ def print_datastores() -> None:
                 # Not available
                 estimated_full_timespan = -1
 
-            # GC Infos abrufen
+            # Get GC information
             gc_info = get_gc_info(store_name)
             gc_last_run_state = gc_info["gc_last_run_state"]
             gc_last_run_endtime = gc_info["gc_last_run_endtime"]
@@ -230,7 +233,11 @@ def print_task_summary() -> None:
     for task in tasks:
 
         worker_type = task.get("worker_type", "unknown")
-        status = task.get("status", "not_found").lower()
+        status = task.get("status", "").lower()
+
+        # Ignore jobs without status
+        if status == "":
+            continue
 
         # Combine known different worker_type values
         for real_worker_type, worker_type_alias in worker_type_aliases.items():

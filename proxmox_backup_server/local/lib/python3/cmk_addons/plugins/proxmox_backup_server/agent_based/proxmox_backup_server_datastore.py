@@ -86,6 +86,14 @@ def check_proxmox_backup_server_datastore(item: str, params: Dict[str, Any], sec
         # Get metric specs
         _, label, render_func, notice_only, levels_lower, levels_upper = proxmox_backup_server_metric_specs._METRIC_SPECS_DATASTORES[metric]
 
+        # Metric missed in agent output
+        if metric not in datastore["metrics"]:
+            yield Result(
+                state=State.UNKNOWN,
+                notice=f"Metric '{metric}' missed.",
+            )
+            continue
+
         # Convert dictionaries
         if isinstance(params.get(metric), dict):
             params_any: Any = params.get(metric)
@@ -103,8 +111,8 @@ def check_proxmox_backup_server_datastore(item: str, params: Dict[str, Any], sec
         if metric == "gc_state":
             # Check Garbage Collection state
             yield Result(
-                state=State.OK if (datastore["metrics"][metric] == "OK") else State.CRIT,
-                notice="GC State: %s" % datastore["metrics"][metric],
+                state=State.OK if datastore["metrics"][metric] in ("OK", "RUNNING") else State.CRIT,
+                notice=f"GC State: {datastore["metrics"][metric]}",
             )
 
         elif metric == "filled":

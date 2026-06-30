@@ -130,27 +130,35 @@ def parse_proxmox_backup_server(string_table: StringTable) -> Section:
             }
 
             # Parse metrics from specs for mounted and nonremoval
-            if datastore["mount_status"] in ["mounted", "nonremovable"]:
-                for idx, metric_spec in enumerate(proxmox_backup_server_metric_specs._METRIC_SPECS_DATASTORES):
-                    parse_metric = proxmox_backup_server_metric_specs._METRIC_SPECS_DATASTORES[metric_spec][0]
-                    if len(line) >= idx+3 and parse_metric:
-                        if proxmox_backup_server_metric_specs._METRIC_SPECS_DATASTORES[metric_spec][2] == str:
-                            metrics[metric_spec] = line[idx+3]
-                        elif proxmox_backup_server_metric_specs._METRIC_SPECS_DATASTORES[metric_spec][2] is render.percent:
-                            metrics[metric_spec] = float(line[idx+3])
-                        else:
-                            # Convert non-string metrics to integer
-                            metrics[metric_spec] = int(line[idx+3])
+            try:
+                if datastore["mount_status"] in ["mounted", "nonremovable"]:
+                    for idx, metric_spec in enumerate(proxmox_backup_server_metric_specs._METRIC_SPECS_DATASTORES):
+                        parse_metric = proxmox_backup_server_metric_specs._METRIC_SPECS_DATASTORES[metric_spec][0]
+                        if len(line) >= idx+3 and parse_metric:
+                            if proxmox_backup_server_metric_specs._METRIC_SPECS_DATASTORES[metric_spec][2] == str:
+                                metrics[metric_spec] = line[idx+3]
+                            elif proxmox_backup_server_metric_specs._METRIC_SPECS_DATASTORES[metric_spec][2] is render.percent:
+                                metrics[metric_spec] = float(line[idx+3])
+                            else:
+                                # Convert non-string metrics to integer
+                                metrics[metric_spec] = int(line[idx+3])
 
-                # Calculate deduplication factor
-                metrics["deduplication_factor"] = round(metrics["gc_index_data_bytes"] / int(metrics["gc_disk_bytes"]), 2)
+                    # Calculate deduplication factor
+                    if metrics["gc_disk_bytes"] > 0:
+                        metrics["deduplication_factor"] = round(metrics["gc_index_data_bytes"] / metrics["gc_disk_bytes"], 2)
 
-                # Calculate timespan from Garbage Collection Endtime
-                # (done on server to prevent overdue caused by cached agent results)
-                metrics["gc_endtime_timespan"] = int(time.time())-metrics["gc_endtime_timespan"]
+                    # Calculate timespan from Garbage Collection Endtime
+                    # (done on server to prcevent overdue caused by cached agent results)
+                    # Do not calculate if value is 0 (missing endtime)
+                    if metrics["gc_endtime_timespan"] > 0:
+                        metrics["gc_endtime_timespan"] = int(time.time())-metrics["gc_endtime_timespan"]
 
-                # Add metrics
-                datastore["metrics"] = metrics
+                    # Add metrics
+                    datastore["metrics"] = metrics
+
+            except (KeyError, TypeError, ValueError):
+                # Ignore entry for datastore due to errors in conversion
+                pass
 
             parsed["datastores"][store] = datastore
 
@@ -168,11 +176,15 @@ def parse_proxmox_backup_server(string_table: StringTable) -> Section:
             # Get values
             metrics: Metrics = {}
 
-            for idx, metric_spec in enumerate(proxmox_backup_server_metric_specs._METRIC_SPECS_TASK_SUMMARY):
-                metrics[metric_spec] = int(line[idx+1])
+            try:
+                for idx, metric_spec in enumerate(proxmox_backup_server_metric_specs._METRIC_SPECS_TASK_SUMMARY):
+                    metrics[metric_spec] = int(line[idx+1])
 
-            # Add metrics
-            parsed["task_summary"][worker_type] = metrics
+                # Add metrics
+                parsed["task_summary"][worker_type] = metrics
+            except (TypeError, ValueError):
+                # Ignore entry for task summary due to errors in conversion
+                pass
 
         # Section "sync_jobs", "prune_jobs" / "verify_jobs"
         # Format sync: "<id>: <state> <last_run> <next_run> <sync_direction> <local> <remote> <max_depth>"
@@ -189,29 +201,34 @@ def parse_proxmox_backup_server(string_table: StringTable) -> Section:
             # Get values
             metrics: Metrics = {}
             job: Job = {}
-            if current_section == "sync_jobs":
-                # Sync job
-                job["state"] = line[1]
-                job["sync_direction"] = line[4]
-                job["local"] = line[5]
-                job["remote"] = line[6]
-                job["max_depth"] = line[7] if line[7] == "Full" else int(line[7])
-            else:
-                # Prune job / Verify job
-                job["state"] = line[1]
-                job["local"] = line[4]
-                job["max_depth"] = line[5] if line[5] == "Full" else int(line[5])
-
-            for idx, metric_spec in enumerate(proxmox_backup_server_metric_specs._METRIC_SPECS_JOB):
-                if proxmox_backup_server_metric_specs._METRIC_SPECS_JOB[metric_spec][1] == render.timespan:
-                    # Create absolute difference of time
-                    metrics[metric_spec] = abs(int(time.time())-int(line[idx+2]))
+            try:
+                if current_section == "sync_jobs":
+                    # Sync job
+                    job["state"] = line[1]
+                    job["sync_direction"] = line[4]
+                    job["local"] = line[5]
+                    job["remote"] = line[6]
+                    job["max_depth"] = line[7] if line[7] == "Full" else int(line[7])
                 else:
-                    # Convert non-string metrics to integer
-                    metrics[metric_spec] = int(line[idx+2])
+                    # Prune job / Verify job
+                    job["state"] = line[1]
+                    job["local"] = line[4]
+                    job["max_depth"] = line[5] if line[5] == "Full" else int(line[5])
 
-            # Add metrics
-            job["metrics"] = metrics
+                for idx, metric_spec in enumerate(proxmox_backup_server_metric_specs._METRIC_SPECS_JOB):
+                    if proxmox_backup_server_metric_specs._METRIC_SPECS_JOB[metric_spec][1] == render.timespan:
+                        # Create absolute difference of time
+                        metrics[metric_spec] = abs(int(time.time())-int(line[idx+2]))
+                    else:
+                        # Convert non-string metrics to integer
+                        metrics[metric_spec] = int(line[idx+2])
+
+                # Add metrics
+                job["metrics"] = metrics
+
+            except (TypeError, ValueError):
+                # Ignore metrics for job due to errors in conversion
+                pass
 
             # Add metrics
             parsed[current_section][id] = job
