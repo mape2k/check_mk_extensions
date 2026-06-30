@@ -64,3 +64,9 @@ If services did not get discovered by checkmk, please check:
 
 ### 2.4
   * Initial implementation supporting datastores, task summary and sync/prune/verify jobs supporting checkmk 2.4 or newer
+
+### 2.4.1
+  * :warning: **New version of the check_mk_agent plugin – replacement required.**
+  * Fix issues with unknown values while Garbage collect is running
+  * Ignore running jobs in task summary instead of classify them as error
+  * Add exception handling for invalid agent output to prevent crashes in checkmk
