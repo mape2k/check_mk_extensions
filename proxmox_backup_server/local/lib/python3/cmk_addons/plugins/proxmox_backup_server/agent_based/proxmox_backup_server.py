@@ -179,7 +179,7 @@ def parse_proxmox_backup_server(string_table: StringTable) -> Section:
 
                 # Add metrics
                 parsed["task_summary"][worker_type] = metrics
-            except (KeyError, TypeError, ValueError):
+            except (TypeError, ValueError):
                 # Ignore entry for task summary due to errors in conversion
                 pass
 
@@ -198,29 +198,34 @@ def parse_proxmox_backup_server(string_table: StringTable) -> Section:
             # Get values
             metrics: Metrics = {}
             job: Job = {}
-            if current_section == "sync_jobs":
-                # Sync job
-                job["state"] = line[1]
-                job["sync_direction"] = line[4]
-                job["local"] = line[5]
-                job["remote"] = line[6]
-                job["max_depth"] = line[7] if line[7] == "Full" else int(line[7])
-            else:
-                # Prune job / Verify job
-                job["state"] = line[1]
-                job["local"] = line[4]
-                job["max_depth"] = line[5] if line[5] == "Full" else int(line[5])
-
-            for idx, metric_spec in enumerate(proxmox_backup_server_metric_specs._METRIC_SPECS_JOB):
-                if proxmox_backup_server_metric_specs._METRIC_SPECS_JOB[metric_spec][1] == render.timespan:
-                    # Create absolute difference of time
-                    metrics[metric_spec] = abs(int(time.time())-int(line[idx+2]))
+            try:
+                if current_section == "sync_jobs":
+                    # Sync job
+                    job["state"] = line[1]
+                    job["sync_direction"] = line[4]
+                    job["local"] = line[5]
+                    job["remote"] = line[6]
+                    job["max_depth"] = line[7] if line[7] == "Full" else int(line[7])
                 else:
-                    # Convert non-string metrics to integer
-                    metrics[metric_spec] = int(line[idx+2])
+                    # Prune job / Verify job
+                    job["state"] = line[1]
+                    job["local"] = line[4]
+                    job["max_depth"] = line[5] if line[5] == "Full" else int(line[5])
 
-            # Add metrics
-            job["metrics"] = metrics
+                for idx, metric_spec in enumerate(proxmox_backup_server_metric_specs._METRIC_SPECS_JOB):
+                    if proxmox_backup_server_metric_specs._METRIC_SPECS_JOB[metric_spec][1] == render.timespan:
+                        # Create absolute difference of time
+                        metrics[metric_spec] = abs(int(time.time())-int(line[idx+2]))
+                    else:
+                        # Convert non-string metrics to integer
+                        metrics[metric_spec] = int(line[idx+2])
+
+                # Add metrics
+                job["metrics"] = metrics
+
+            except (TypeError, ValueError):
+                # Ignore metrics for job due to errors in conversion
+                pass
 
             # Add metrics
             parsed[current_section][id] = job
