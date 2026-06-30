@@ -154,7 +154,7 @@ def parse_proxmox_backup_server(string_table: StringTable) -> Section:
                     datastore["metrics"] = metrics
 
             except (KeyError, TypeError, ValueError):
-                # Ignore entry for datastrore due to errors in conversion
+                # Ignore entry for datastore due to errors in conversion
                 pass
 
             parsed["datastores"][store] = datastore
@@ -173,11 +173,15 @@ def parse_proxmox_backup_server(string_table: StringTable) -> Section:
             # Get values
             metrics: Metrics = {}
 
-            for idx, metric_spec in enumerate(proxmox_backup_server_metric_specs._METRIC_SPECS_TASK_SUMMARY):
-                metrics[metric_spec] = int(line[idx+1])
+            try:
+                for idx, metric_spec in enumerate(proxmox_backup_server_metric_specs._METRIC_SPECS_TASK_SUMMARY):
+                    metrics[metric_spec] = int(line[idx+1])
 
-            # Add metrics
-            parsed["task_summary"][worker_type] = metrics
+                # Add metrics
+                parsed["task_summary"][worker_type] = metrics
+            except (KeyError, TypeError, ValueError):
+                # Ignore entry for task summary due to errors in conversion
+                pass
 
         # Section "sync_jobs", "prune_jobs" / "verify_jobs"
         # Format sync: "<id>: <state> <last_run> <next_run> <sync_direction> <local> <remote> <max_depth>"

@@ -74,7 +74,15 @@ def check_proxmox_backup_server_task_summary(params: Dict[str, Any], section: Se
     )
 
     # Check metrics for every worker_type
-    for worker_type in task_summary:
+    for worker_type in _WORKER_TYPES_TASK_SUMMARY:
+
+        # Worker type missing
+        if worker_type not in task_summary:
+            yield Result(
+                state=State.UNKNOWN,
+                notice=f"Metrics for {_WORKER_TYPES_TASK_SUMMARY[worker_type]} missing. Please check agent plugin version.",
+            )
+            continue
 
         # Parameters for worker_type must be dict
         if not isinstance(params.get(worker_type), dict):
