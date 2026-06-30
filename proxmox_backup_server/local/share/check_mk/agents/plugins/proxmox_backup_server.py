@@ -230,7 +230,11 @@ def print_task_summary() -> None:
     for task in tasks:
 
         worker_type = task.get("worker_type", "unknown")
-        status = task.get("status", "not_found").lower()
+        status = task.get("status", "").lower()
+
+        # Ignore jobs without status
+        if status == "":
+            continue
 
         # Combine known different worker_type values
         for real_worker_type, worker_type_alias in worker_type_aliases.items():
