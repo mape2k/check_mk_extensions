@@ -144,11 +144,14 @@ def parse_proxmox_backup_server(string_table: StringTable) -> Section:
                                 metrics[metric_spec] = int(line[idx+3])
 
                     # Calculate deduplication factor
-                    metrics["deduplication_factor"] = round(metrics["gc_index_data_bytes"] / metrics["gc_disk_bytes"], 2)
+                    if metrics["gc_disk_bytes"] > 0:
+                        metrics["deduplication_factor"] = round(metrics["gc_index_data_bytes"] / metrics["gc_disk_bytes"], 2)
 
                     # Calculate timespan from Garbage Collection Endtime
-                    # (done on server to prevent overdue caused by cached agent results)
-                    metrics["gc_endtime_timespan"] = int(time.time())-metrics["gc_endtime_timespan"]
+                    # (done on server to prcevent overdue caused by cached agent results)
+                    # Do not calculate if value is 0 (missing endtime)
+                    if metrics["gc_endtime_timespan"] > 0:
+                        metrics["gc_endtime_timespan"] = int(time.time())-metrics["gc_endtime_timespan"]
 
                     # Add metrics
                     datastore["metrics"] = metrics
