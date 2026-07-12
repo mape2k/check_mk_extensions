@@ -102,17 +102,24 @@ def check_proxmox_backup_server_datastore(item: str, params: Dict[str, Any], sec
             params_any: Any = params.get(metric)
             params_tuple: tuple = params_any
 
-        # Ignore metric "estimated_full_timespan" with value -1 (missing)
-        if metric == "estimated_full_timespan" and datastore["metrics"][metric] == -1:
-            render_func = None
-            levels_lower = False
-            levels_upper = False
+        if metric == "estimated_full_timespan":
+            # Ignore metric "estimated_full_timespan" for -1 (missing)
+            if datastore["metrics"][metric] == -1:
+                continue
+            # Ignore Levels for "estimated_full_timespan" for 0 (Never)
+            if datastore["metrics"][metric] == 0:
+                levels_lower = False
+                levels_upper = False
+                yield Result(
+                    state=State.OK,
+                    notice=f"{label}: Never",
+                )
 
         if metric == "gc_state":
             # Check Garbage Collection state
             yield Result(
                 state=State.OK if datastore["metrics"][metric] in ("OK", "RUNNING") else State.CRIT,
-                notice=f"GC State: {datastore["metrics"][metric]}",
+                notice=f"{label}: {datastore["metrics"][metric]}",
             )
 
         elif metric == "filled":

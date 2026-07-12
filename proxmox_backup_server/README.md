@@ -70,3 +70,6 @@ If services did not get discovered by checkmk, please check:
   * Fix issues with unknown values while Garbage collect is running
   * Ignore running jobs in task summary instead of classify them as error
   * Add exception handling for invalid agent output to prevent crashes in checkmk
+
+### 2.4.2
+  * Datastore: Ignore levels for Estimated full in Never
