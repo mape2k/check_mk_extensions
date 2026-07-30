@@ -118,3 +118,7 @@ If services did not get discovered by checkmk, please check:
 
 ### 0.1.0
   * Initial implementation supporting checkmk 2.4 or newer
+
+## Disclosure
+
+Parts of this project were assisted using Claude Code.
