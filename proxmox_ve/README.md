@@ -2,7 +2,7 @@
 
 This agent plugin checks Proxmox VE using the Checkmk-Agent.
 
-It produces the same output as the official Promox VE special agent including piggyback sections for Virtual Machines and Linux Containers (LXC). In most places, it (re)uses the source code of # the Proxmox VE special agent.
+It produces the same output as the official Promox VE special agent including piggyback sections for Virtual Machines and Linux Containers (LXC). In most places, it (re)uses the source code of the Proxmox VE special agent.
 
 This solution is intended for cases where the Proxmox VE node is not directly accessible from the Checkmk server.
 
