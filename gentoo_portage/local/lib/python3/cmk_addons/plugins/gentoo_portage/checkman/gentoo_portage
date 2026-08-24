@@ -1,0 +1,12 @@
+title: Gentoo Portage: Updates and Security Advisories
+agents: linux
+catalog: os/misc
+author: Marcel Pennewiss <opensource@pennewiss.de>
+license: GPLv2
+distribution: check_mk
+description:
+ This check checks for pending updates and security advisories using portage libraries.
+
+inventory:
+ One service is created for each system where the {gentoo_portage}
+ plug-in is being installed and Gentoo is detected as distribution.
