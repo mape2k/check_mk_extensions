@@ -116,7 +116,11 @@ If services did not get discovered by checkmk, please check:
 
 ## Changelog
 
+### 0.2.0
+  * Fix crash when monitoring an IPv6-only host via IP ([Werk #20184](https://checkmk.com/werk/20184))
+
 ### 0.1.0
+
   * Initial implementation supporting checkmk 2.4 or newer
 
 ## Disclosure

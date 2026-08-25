@@ -21,13 +21,14 @@
 # Containers (LXC). In most places, it (re)uses the source code of
 # the Proxmox VE special agent.
 
-# Version: 1.0
+# Version: 0.2.0
 
 # Config file: $MK_CONFDIR/proxmox_ve.cfg
 
 # Use annotations like python 3.14 or newer
 from __future__ import annotations
 
+import ipaddress
 import itertools
 import json
 import os
@@ -552,7 +553,7 @@ class _ProxmoxVeSession:
         # Disable TLS verification warnings for HTTPS API
         if not self._verify_ssl:
             urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-        self._base_url = "https://%s:%d/" % (config.host, config.port)
+        self._base_url = f"https://{self._host_port_for_url(config.host, config.port)}/"
         self._session = create_session()
 
     def __enter__(self) -> Any:
@@ -636,6 +637,18 @@ class _ProxmoxVeSession:
                 "Could not fetch {!r} ({!r})".format(sub_url, response_json["errors"])
             )
         return response_json.get("data")
+
+    @staticmethod
+    def _host_port_for_url(host: str, port: int) -> str:
+        """Render host:port for use in a URL, bracketing IPv6 literals per RFC 3986.
+
+        Source: packages/cmk-plugins/cmk/plugins/proxmox_ve/special_agent/libproxmox.py
+        """
+        try:
+            is_ipv6 = ipaddress.ip_address(host).version == 6
+        except ValueError:
+            is_ipv6 = False
+        return f"[{host}]:{port}" if is_ipv6 else f"{host}:{port}"
 
 
 class _ProxmoxVeSessionPvesh:
