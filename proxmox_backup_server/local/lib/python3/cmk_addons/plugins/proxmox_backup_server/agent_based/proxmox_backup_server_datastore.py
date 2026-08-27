@@ -131,9 +131,13 @@ def check_proxmox_backup_server_datastore(item: str, params: Dict[str, Any], sec
                 boundaries=(0.0, 100.0)
             )
 
-            status = (
-                State.CRIT if datastore["metrics"]["filled"] >= params_tuple[1][1] else State.WARN if datastore["metrics"]["filled"] >= params_tuple[1][0] else State.OK  # pyright: ignore[reportPossiblyUnboundVariable]
-            )
+            try:
+                status = (
+                    State.CRIT if datastore["metrics"]["filled"] >= params_tuple[1][1] else State.WARN if datastore["metrics"]["filled"] >= params_tuple[1][0] else State.OK  # pyright: ignore[reportPossiblyUnboundVariable]
+                )
+            except (TypeError):
+                # Set State to OK on no_levels
+                status = State.OK
 
             summary = (
                 f"Used: {render.percent(datastore["metrics"]["filled"])} "
