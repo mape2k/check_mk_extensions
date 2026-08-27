@@ -34,7 +34,7 @@ The plugin should be executed async, adjust the interval (e.g. 3600 seconds) to 
 # Download the plugin script
 mkdir /usr/lib/check_mk_agent/plugins/3600
 sudo wget https://github.com/mape2k/check_mk_extensions/raw/refs/heads/cmk2.4/gentoo_portage/local/share/check_mk/agents/plugins/gentoo_portage.py -O /usr/lib/check_mk_agent/plugins/3600/gentoo_portage.py
-sudo chmod +x /usr/lib/check_mk_agent/plugins/1800/gentoo_portage.py
+sudo chmod +x /usr/lib/check_mk_agent/plugins/3600/gentoo_portage.py
 ```
 
 There are some variables in the plugin script for configuration:
