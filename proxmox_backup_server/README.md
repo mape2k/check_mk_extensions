@@ -62,8 +62,11 @@ If services did not get discovered by checkmk, please check:
 
 ## Changelog
 
-### 2.4
-  * Initial implementation supporting datastores, task summary and sync/prune/verify jobs supporting checkmk 2.4 or newer
+### 2.4.3
+  * Datastore: Fix issue with "No levels" for "Levels for used space" (reported by [mbunkus](https://github.com/mbunkus))
+
+### 2.4.2
+  * Datastore: Ignore levels for Estimated full in Never
 
 ### 2.4.1
   * :warning: **New version of the check_mk_agent plugin – replacement required.**
@@ -71,5 +74,5 @@ If services did not get discovered by checkmk, please check:
   * Ignore running jobs in task summary instead of classify them as error
   * Add exception handling for invalid agent output to prevent crashes in checkmk
 
-### 2.4.2
-  * Datastore: Ignore levels for Estimated full in Never
+### 2.4
+  * Initial implementation supporting datastores, task summary and sync/prune/verify jobs supporting checkmk 2.4 or newer
