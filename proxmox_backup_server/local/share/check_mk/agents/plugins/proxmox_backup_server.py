@@ -263,7 +263,7 @@ def print_task_summary() -> None:
 
     # Output summarized counters
     for status in result:
-        print(f"{status}: {result[status]["ok"]} {result[status]["warning"]} {result[status]["error"]} {result[status]["unknown"]} {result[status]["notmounted"]}")
+        print(f"{status}: {result[status]['ok']} {result[status]['warning']} {result[status]['error']} {result[status]['unknown']} {result[status]['notmounted']}")
 
 
 def _print_jobs(jobtype: str, data: list[dict[str, str]]) -> None:
