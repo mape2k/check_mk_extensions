@@ -62,6 +62,10 @@ If services did not get discovered by checkmk, please check:
 
 ## Changelog
 
+### 2.4.4
+  * :warning: **New version of the check_mk_agent plugin – replacement required.**
+  * Agent Plugin: Fix quoting in f-string (reported by [mbunkus](https://github.com/mbunkus) and [virus2500](https://github.com/virus2500))
+
 ### 2.4.3
   * Datastore: Fix issue with "No levels" for "Levels for used space" (reported by [mbunkus](https://github.com/mbunkus))
 
