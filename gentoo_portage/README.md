@@ -45,5 +45,8 @@ There are some variables in the plugin script for configuration:
 
 ## Changelog
 
+### 2.4.1
+  * Deduplicate GLSA package list in summary
+
 ### 2.4.0
   * Initial implementation supporting portage sync, updates and GLSA
