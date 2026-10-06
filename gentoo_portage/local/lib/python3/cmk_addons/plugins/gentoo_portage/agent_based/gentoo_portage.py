@@ -340,10 +340,11 @@ def _check_gentoo_portage_glsa(params: Dict[str, Any], section: Section) -> Chec
         )
         return
 
-    # Create package lists if configured
+    # Create deduplicated package lists if configured
     cps = ""
     if params["glsa"]["add_package_names"]:
-        cps = f" ({", ".join(sorted((_format_cp(e, None) for e in glsa.get("glsa", [])), key=str.lower))})"
+        formatted = {_format_cp(e, None) for e in glsa.get("glsa", [])}
+        cps = f" ({", ".join(sorted(formatted, key=str.lower))})"
 
     # Check for glsa entries of installed packages
     if glsa["metrics"]["entries"] > 0:
