@@ -209,7 +209,7 @@ class LrmNode(BaseModel):
     """Ported from Source: packages/cmk-plugins/cmk/plugins/proxmox_ve/lib/ha_manager_status.py"""
     node: str
     status: str
-    timestamp: int
+    timestamp: int | None = None
     type: Literal["lrm"]
     # Original used = {}; stdlib dataclasses require default_factory for mutable defaults.
     services: Mapping[str, ServiceItem] = field(default_factory=dict)
@@ -223,7 +223,7 @@ class LrmNode(BaseModel):
         return cls(
             node=str(raw["node"]),
             status=str(raw["status"]),
-            timestamp=int(raw["timestamp"]),
+            timestamp=int(raw["timestamp"]) if "timestamp" in raw else None,
             type=cast(Literal["lrm"], raw_type),
         )
 
