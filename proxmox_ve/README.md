@@ -116,7 +116,12 @@ If services did not get discovered by checkmk, please check:
 
 ## Changelog
 
+### 0.3.0
+
+  * Don't crash on storages with an unknown storage type ([Werk #22367](https://checkmk.com/werk/22367))
+
 ### 0.2.0
+
   * Fix crash when monitoring an IPv6-only host via IP ([Werk #20184](https://checkmk.com/werk/20184))
 
 ### 0.1.0
