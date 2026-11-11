@@ -116,6 +116,10 @@ If services did not get discovered by checkmk, please check:
 
 ## Changelog
 
+### 0.3.1
+
+  * Don't crash on an uptime of -1 ([Werk #22966](https://checkmk.com/werk/22966))
+
 ### 0.3.0
 
   * Don't crash on storages with an unknown storage type ([Werk #22367](https://checkmk.com/werk/22367))

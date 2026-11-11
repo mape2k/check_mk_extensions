@@ -460,7 +460,7 @@ class SectionVMInfo(BaseModel, frozen=True):
     name: str
     # Original used Field(default=0, ge=0). use model_validate() here
     # stdlib dataclasses have no ge constraint
-    uptime: int = 0
+    uptime: int | None = 0
     lock: LockState | None = None
     cluster: str | None = None
 
@@ -1855,7 +1855,7 @@ class AgentProxmoxVe:
                 type=vm["type"],
                 status=vm["status"],
                 name=vm["name"],
-                uptime=vm["uptime"],
+                uptime=vm["uptime"] if vm["uptime"] >= 0 else None,
                 lock=lock_state,
                 cluster=str(node_cluster_mapping[vm["node"]])
                 if vm["node"] in node_cluster_mapping
