@@ -371,7 +371,7 @@ class Storage(BaseModel, frozen=True):
     maxdisk: float | None = None
     # Original used Field(validation_alias=AliasChoices(...)); use model_validate() here.
     # stdlib dataclasses have no Field with validation/alias support.
-    storage_type: StorageType
+    storage_type: StorageType | str
     status: StorageStatus | None = None
     # Original used Field(validation_alias=AliasChoices(...)); use model_validate() here.
     # stdlib dataclasses have no Field with validation/alias support.
@@ -386,7 +386,7 @@ class Storage(BaseModel, frozen=True):
             node=raw["node"],
             disk=raw.get("disk"),
             maxdisk=raw.get("maxdisk"),
-            storage_type=StorageType(raw_type),
+            storage_type=StorageType(raw_type) if raw_type in StorageType else raw_type,
             status=StorageStatus(raw_status) if raw_status is not None else None,
             name=raw.get("storage", raw.get("name")),
         )
