@@ -116,6 +116,13 @@ If services did not get discovered by checkmk, please check:
 
 ## Changelog
 
+### 0.3.1
+
+  * Don't crash on import lock ([Werk #22823](https://checkmk.com/werk/22823))
+  * Don't crash on an uptime of -1 ([Werk #22966](https://checkmk.com/werk/22966))
+  * Don't crash on an LRM node without timestamp ([Werk #22968](https://checkmk.com/werk/22968))
+  * Don't crash on a truncated backup cache ([Werk #23002](https://checkmk.com/werk/23002))
+
 ### 0.3.0
 
   * Don't crash on storages with an unknown storage type ([Werk #22367](https://checkmk.com/werk/22367))
