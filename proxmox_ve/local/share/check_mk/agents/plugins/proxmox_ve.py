@@ -1134,9 +1134,14 @@ class Backup:
         Ported from Source: packages/cmk-plugins/cmk/plugins/proxmox_ve/special_agent/libbackups.py
         """
 
-        cache = json.loads(storage.read(key=storage_key, default="{}") or "{}")
-
         dirty = False
+        try:
+            cache = json.loads(storage.read(key=storage_key, default="{}") or "{}")
+        except json.JSONDecodeError as exc:
+            sys.stderr.write(f"Cache: discarding unreadable file {storage_key}: {exc}")
+            cache = {}
+            dirty = True
+
         # note: this must not be a generator - otherwise we modify a dict while iterating it
         for key in [k for k, data in cache.items() if cutoff_condition(k, data)]:
             dirty = True
