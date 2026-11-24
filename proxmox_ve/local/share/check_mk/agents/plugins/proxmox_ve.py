@@ -209,7 +209,7 @@ class LrmNode(BaseModel):
     """Ported from Source: packages/cmk-plugins/cmk/plugins/proxmox_ve/lib/ha_manager_status.py"""
     node: str
     status: str
-    timestamp: int
+    timestamp: int | None = None
     type: Literal["lrm"]
     # Original used = {}; stdlib dataclasses require default_factory for mutable defaults.
     services: Mapping[str, ServiceItem] = field(default_factory=dict)
@@ -223,7 +223,7 @@ class LrmNode(BaseModel):
         return cls(
             node=str(raw["node"]),
             status=str(raw["status"]),
-            timestamp=int(raw["timestamp"]),
+            timestamp=int(raw["timestamp"]) if "timestamp" in raw else None,
             type=cast(Literal["lrm"], raw_type),
         )
 
@@ -443,7 +443,12 @@ class LockState(StrEnum):
     BACKUP = "backup"
     CLONE = "clone"
     CREATE = "create"
+    DESTROYED = "destroyed"
+    DISK = "disk"
+    FSTRIM = "fstrim"
+    IMPORT = "import"
     MIGRATE = "migrate"
+    MOUNTED = "mounted"
     ROLLBACK = "rollback"
     SNAPSHOT = "snapshot"
     SNAPSHOT_DELETE = "snapshot-delete"
@@ -460,7 +465,7 @@ class SectionVMInfo(BaseModel, frozen=True):
     name: str
     # Original used Field(default=0, ge=0). use model_validate() here
     # stdlib dataclasses have no ge constraint
-    uptime: int = 0
+    uptime: int | None = 0
     lock: LockState | None = None
     cluster: str | None = None
 
@@ -1134,9 +1139,14 @@ class Backup:
         Ported from Source: packages/cmk-plugins/cmk/plugins/proxmox_ve/special_agent/libbackups.py
         """
 
-        cache = json.loads(storage.read(key=storage_key, default="{}") or "{}")
-
         dirty = False
+        try:
+            cache = json.loads(storage.read(key=storage_key, default="{}") or "{}")
+        except json.JSONDecodeError as exc:
+            sys.stderr.write(f"Cache: discarding unreadable file {storage_key}: {exc}")
+            cache = {}
+            dirty = True
+
         # note: this must not be a generator - otherwise we modify a dict while iterating it
         for key in [k for k, data in cache.items() if cutoff_condition(k, data)]:
             dirty = True
@@ -1686,23 +1696,18 @@ class AgentProxmoxVe:
 
         #  overwrite all the start time strings with timezone aware start strings
         for vmid in logged_backup_data:
-            try:
-                # Happens when the VM has backup data but is not in all_vms
-                tz = node_timezones[all_vms[vmid]["node"]]
-            except KeyError:
-                # get the first value of the first key
-                tz = next(iter(node_timezones.values()))
+            tz = __class__._backup_timezone(vmid, all_vms, node_timezones)
             logged_backup_data[vmid]["started_time"] = date_to_utc(
                 logged_backup_data[vmid]["started_time"], tz
             )
 
         for node in data["nodes"]:
-            piggyback_host = AgentProxmoxVe.node_piggyback_host(
+            piggyback_host = __class__.node_piggyback_host(
                 # Original used arg.hostname; hostname here
                 config.host, node["node"], [n["node"] for n in data["nodes"]]
             )
             sys.stdout.write(f"<<<<{piggyback_host}>>>>\n")
-            for name, content in AgentProxmoxVe._create_node_sections(
+            for name, content in __class__._create_node_sections(
                 node,
                 all_vms,
                 node_cluster_mapping,
@@ -1721,7 +1726,7 @@ class AgentProxmoxVe:
 
         for vmid, vm in all_vms.items():
             sys.stdout.write(f"<<<<{vm['name'] or ''}>>>>\n")
-            for name, content in AgentProxmoxVe._create_vm_sections(
+            for name, content in __class__._create_vm_sections(
                 vmid,
                 vm,
                 config_lock_data,
@@ -1835,6 +1840,18 @@ class AgentProxmoxVe:
             )
 
     @staticmethod
+    def _backup_timezone(
+        vmid: str, all_vms: Mapping[str, Mapping[str, Any]], node_timezones: Mapping[str, str]
+    ) -> str:
+        """Ported from Source: packages/cmk-plugins/cmk/plugins/proxmox_ve/special_agent/agent_proxmox_ve.py"""
+        try:
+            # Happens when the VM has backup data but is not in all_vms
+            return node_timezones[all_vms[vmid]["node"]]
+        except KeyError:
+            # get the first value of the first key
+            return next(iter(node_timezones.values()), "UTC")
+
+    @staticmethod
     def _create_vm_sections(
         vmid: str,
         vm: Any,
@@ -1855,7 +1872,7 @@ class AgentProxmoxVe:
                 type=vm["type"],
                 status=vm["status"],
                 name=vm["name"],
-                uptime=vm["uptime"],
+                uptime=vm["uptime"] if vm["uptime"] >= 0 else None,
                 lock=lock_state,
                 cluster=str(node_cluster_mapping[vm["node"]])
                 if vm["node"] in node_cluster_mapping
