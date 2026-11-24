@@ -1702,12 +1702,12 @@ class AgentProxmoxVe:
             )
 
         for node in data["nodes"]:
-            piggyback_host = AgentProxmoxVe.node_piggyback_host(
+            piggyback_host = __class__.node_piggyback_host(
                 # Original used arg.hostname; hostname here
                 config.host, node["node"], [n["node"] for n in data["nodes"]]
             )
             sys.stdout.write(f"<<<<{piggyback_host}>>>>\n")
-            for name, content in AgentProxmoxVe._create_node_sections(
+            for name, content in __class__._create_node_sections(
                 node,
                 all_vms,
                 node_cluster_mapping,
@@ -1726,7 +1726,7 @@ class AgentProxmoxVe:
 
         for vmid, vm in all_vms.items():
             sys.stdout.write(f"<<<<{vm['name'] or ''}>>>>\n")
-            for name, content in AgentProxmoxVe._create_vm_sections(
+            for name, content in __class__._create_vm_sections(
                 vmid,
                 vm,
                 config_lock_data,

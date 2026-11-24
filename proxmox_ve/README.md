@@ -123,6 +123,7 @@ If services did not get discovered by checkmk, please check:
   * Don't crash on an LRM node without timestamp ([Werk #22968](https://checkmk.com/werk/22968))
   * Don't crash without node timezone ([Werk #23000](https://checkmk.com/werk/23000))
   * Don't crash on a truncated backup cache ([Werk #23002](https://checkmk.com/werk/23002))
+  * Change calls for static methods in AgentProxmoxVe to `__class__`
 
 ### 0.3.0
 
